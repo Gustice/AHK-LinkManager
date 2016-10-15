@@ -7,6 +7,8 @@
 ;		- Little helfp finding and editing ini file
 ; Version 0.5: 
 ;		- Menu structures with up to 3 levels possible, each node can contain further nodes, and/or Leafes
+; Version 0.6:
+;		- Menu structure is setup recursively hence the depth is tecnically not more limited (limitation is given by global variable)
 
 #NoEnv  ; Recommended for performance and compatibility with future AutoHotkey releases.
 SendMode Input  ; Recommended for new scripts due to its superior speed and reliability.
@@ -16,13 +18,14 @@ SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directory.
 ; Initialization of global Variables
 ;**********************************************************
 
-G_VersionString := "Version 0.50" 	; Version string
+G_VersionString := "Version 0.60" 	; Version string
 U_IniFile := "MyLinks.ini" 			; Ini file with user links
 global SYS_NewLine := "`r`n" 		; Definition for New Line  @todo hier prüfen
-global NBranchKey := "Node"
+global G_NBranchKey := "Node"		; Keyword for Branch-Definition in ini-File
+global G_MAX_MenuDepth := 10		; Defines maximum count of Menu levels. "1" means there are no nodes allowed
 
 Menu, Tray, Icon, shell32.dll, 4 	; Changes Tray-Icon to build in icons (see C:\Windows\System32\shell32.dll)
-Menu, Tray, TIp, AHK-LinkManager %G_VersionString% ; Tooltip für TrayIcon: Zeigt den Versionsstand
+Menu, Tray, TIp, AHK-LinkManager %G_VersionString% ; Tooltip für TrayIcon: Shows Version
 
 ;**********************************************************
 ; Setup shortcut
@@ -50,25 +53,23 @@ Menu, tray, add, Help, TrayMenuHandler
 ;**********************************************************
 ; Initializing of Userdefined Menu-Tree
 ;**********************************************************
+; Setup some gloabel Variables
+G_NodeIDX := 1
+G_LevelMem := 1
+JumpStack := Object()
+
 ; Read out user defined Tree-Structure
 IniRead, U_Menu_Trunk, %U_IniFile%, %U_Trunk%
-
-
-;-Menu
-;--Branch
-;---SubbBanch
-;----SubSubBranch
-
-
 MenuName := "MenuRoot"
 ; Analyze user definitions and store result in structure
 MenuTree := ParseUsersDefines(U_Menu_Trunk)
-Knot_Index := 1
-JumpStack := Object()
-JumpStack[Knot_Index, 1] := MenuName
-JumpStack[Knot_Index, 2] := MenuTree
 
-; Erstelle erste Ebene des Menüs
+; Append first menu structure to "unrolled" menu
+JumpStack[G_NodeIDX, 1] := MenuName
+JumpStack[G_NodeIDX, 2] := MenuTree
+G_NodeIDX := G_NodeIDX+1
+
+; Create first Menu level
 Loop % MenuTree.MaxIndex()
 {
 	; Store in helper variables
@@ -76,81 +77,31 @@ Loop % MenuTree.MaxIndex()
 	BranchName := MenuTree[A_Index, 2]
 	BranchCode := MenuTree[A_Index, 3]
 
-	; Erstelle zweite Ebene des Menüs
-	if ( RegExMatch(BranchType, NBranchKey) == 1)
+	; Create socond Menu level (if necessary)
+	if ( RegExMatch(BranchType, G_NBranchKey) == 1)
 	{
-		; Read next node from Ini-File
-		IniRead, SubSection, %U_IniFile%, % BranchCode
-		; Analyze user definitions and store result in structure
-		SubTree := ParseUsersDefines(SubSection)
-		MenuTree[A_Index, 4] := SubTree
-		MBrancheCode := Knot_Index . "Sub_" . BranchCode
-		Knot_Index := Knot_Index+1
-		; Den generierten Namen zurückspeichern
-		MenuTree[A_Index, 1] := MBrancheCode
-		JumpStack[Knot_Index, 1] := MBrancheCode
-		JumpStack[Knot_Index, 2] := MenuTree[A_Index, 4]
-		
-		Loop % SubTree.MaxIndex()
+		; Check whether the next level is permitted
+		if (G_LevelMem < G_MAX_MenuDepth)
 		{
-			; Store in helper variables
-			SubBranchType := SubTree[A_Index, 1]
-			SubBranchName := SubTree[A_Index, 2]
-			SubBranchCode := SubTree[A_Index, 3]
-
-			; Erstelle dritte Ebene des Menüs
-			if ( RegExMatch(SubBranchType, NBranchKey) == 1)
+			NewNodeName := G_NodeIDX . "_Sub_" . BranchCode
+			; Creat next level
+			ValidEntries := GenMenuNode(NewNodeName, BranchCode)
+			; Append submenu if it contains valid entrys
+			if (ValidEntries > 1)
 			{
-				; Read next node from Ini-File
-				IniRead, SubSubSection, %U_IniFile%, % SubBranchCode
-				; Analyze user definitions and store result in structure
-				SubSubTree := ParseUsersDefines(SubSubSection)
-				SubTree[A_Index, 4] := SubSubTree
-				MSubBrancheCode := Knot_Index . "SubSub_" . SubBranchCode
-				Knot_Index := Knot_Index+1 
-				; Den generierten Namen zurückspeichern
-				SubTree[A_Index, 1] := MSubBrancheCode 
-				JumpStack[Knot_Index, 1] := MSubBrancheCode
-				JumpStack[Knot_Index, 2] := SubTree[A_Index, 4]
-				
-				; Set Menu entrys according to user definitions
-				Loop % SubSubTree.MaxIndex()
-				{
-					; Store in helper variables
-					SubSubBranchType := SubSubTree[A_Index,1]
-					SubSubBranchName := SubSubTree[A_Index, 2]
-					SubSubBranchCode := SubSubTree[A_Index, 3]
-					if ( RegExMatch(SubSubBranchType, NBranchKey) == 1)
-					{
-						MsgBox, Es werden nur maximal 3 Ebenen unterstützt
-					}
-					; Store in helper variable
-					EntityName := SubSubTree[A_Index, 2]
-					; Use user defined name for Menu entry
-					Menu, %MSubBrancheCode%, Add, %EntityName%, MenuHandler
-					SubSubTree[A_Index,1] := "Slot"
-					; If selected, it will call Section MenuHandler
-				}
-				; Append SubMenu to Node
-				Menu, %MBrancheCode%, Add, %SubBranchName%, :%MSubBrancheCode%
-			}
-			else
-			{
-				; Submenüeintrag mithilfe von Beziechner
-				EntityName := SubTree[A_Index, 2]
-				Menu, %MBrancheCode%, Add, %EntityName%, MenuHandler
-				SubTree[A_Index,1] := "Slot"
+				Menu, %MenuName%, Add, %BranchName%, :%NewNodeName%
 			}
 		}
-		; Submenüeinträge einhängen in mein Menü
-		Menu, %MenuName%, Add, %BranchName%, :%MBrancheCode%
+		else
+		{
+			MsgBox No Nodes are allowed if G_MAX_MenuDepth is set to 1
+		}
 	}
-	else ; Wenn einfaches Element, dann nur das Element einhängen
+	else ; otherwise create a simple entry
 	{
-		; Submenüeintrag mithilfe von Beziechner
+		; Append entry via name of entry
 		EntityName := MenuTree[A_Index, 2]
 		Menu, %MenuName%, Add, %EntityName%, MenuHandler
-		MenuTree[A_Index,1] := "Slot"
 	}
 }
 
@@ -173,9 +124,16 @@ Loop % JumpStack.MaxIndex()
 	;; Search for Name of calling node 
 	if (A_ThisMenu == BranchCode)
 	{
-		; Execute stored Path or URL or file of selected leaf
 		SelectedNode := JumpStack[A_Index, 2]
-		Run, % SelectedNode[A_ThisMenuItemPos, 3]
+		Loop % SelectedNode.MaxIndex()
+		{
+			CurrentLeaf := SelectedNode[A_Index,2]
+			; Execute stored Path or URL or file of selected leaf
+			if (A_ThisMenuItem == CurrentLeaf)
+			{
+				Run, % SelectedNode[A_Index, 3]
+			}
+		}
 		break
 	}
 }
@@ -218,6 +176,71 @@ else
 }
 return
 
+
+
+;**********************************************************
+; Function to setup one level of Menu structure
+; with recursive approach
+;**********************************************************
+GenMenuNode(NodeName, IniSectionName) ; Name of Menu Node (unique), SectionName in IniFile
+{
+	global U_IniFile
+	global G_LevelMem
+	global G_NBranchKey
+	global G_NodeIDX
+	global JumpStack
+	
+	NumEntries := 0
+	; Store current level:
+	G_LevelMem := G_LevelMem +1
+	
+	; Read next node from Ini-File
+	IniRead, IniSection, %U_IniFile%, % IniSectionName
+	; Analyze user definitions and store result in structure
+	NodeTree := ParseUsersDefines(IniSection)
+
+	JumpStack[G_NodeIDX, 1] := NodeName
+	JumpStack[G_NodeIDX, 2] := NodeTree
+	G_NodeIDX := G_NodeIDX+1
+
+	Loop % NodeTree.MaxIndex()
+	{
+		; Store in helper variables
+		BranchType := NodeTree[A_Index, 1]
+		BranchName := NodeTree[A_Index, 2]
+		BranchCode := NodeTree[A_Index, 3]
+
+		; Create next Menu level (if necessary)
+		if ( RegExMatch(BranchType, G_NBranchKey) == 1)
+		{
+			; Check wheter this Note hits the depth restriction
+			if (G_LevelMem < G_MAX_MenuDepth)
+			{
+				NumEntries = NumEntries+1
+				NewNodeName := G_NodeIDX . "_Sub_" . BranchCode
+				ValidEntries := GenMenuNode(NewNodeName, BranchCode)
+				; Append submenu if it contains valid entrys
+				if (ValidEntries > 1)
+				{
+					Menu, %NodeName%, Add, %BranchName%, :%NewNodeName%
+				}
+			}
+			else
+			{
+				MsgBox The node %BranchName% cannot be considered because the depth of the menu is limited to %G_MAX_MenuDepth%
+			}
+		}
+		else ; otherwise create a simple entry
+		{
+			NumEntries = NumEntries+1
+			; Append entry via name of entry
+			EntityName := NodeTree[A_Index, 2]
+			Menu, %NodeName%, Add, %EntityName%, MenuHandler
+		}
+	}
+	G_LevelMem := G_LevelMem -1
+	return NumEntries
+}
 
 ;**********************************************************
 ; Function to analyze the tree structure

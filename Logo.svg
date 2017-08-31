@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="256"
+   height="256"
+   id="svg2"
+   version="1.1"
+   inkscape:version="0.91 r13725"
+   sodipodi:docname="Logo.svg"
+   inkscape:export-filename="E:\Arbeitsordner\Autohotkey\AHK-LinkManager\AHK-LinkManager\Logo.png"
+   inkscape:export-xdpi="90"
+   inkscape:export-ydpi="90">
+  <defs
+     id="defs4" />
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="2.8"
+     inkscape:cx="134.87926"
+     inkscape:cy="138.59811"
+     inkscape:document-units="px"
+     inkscape:current-layer="layer1"
+     showgrid="true"
+     inkscape:snap-bbox="true"
+     inkscape:window-width="1843"
+     inkscape:window-height="1057"
+     inkscape:window-x="69"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1"
+     inkscape:snap-midpoints="false"
+     inkscape:snap-object-midpoints="true"
+     inkscape:snap-nodes="true"
+     inkscape:snap-global="true"
+     inkscape:object-nodes="true"
+     showguides="false"
+     inkscape:guide-bbox="true"
+     inkscape:snap-center="true">
+    <inkscape:grid
+       type="xygrid"
+       id="grid2987"
+       empspacing="16"
+       visible="true"
+       enabled="true"
+       snapvisiblegridlinesonly="true"
+       spacingx="4"
+       spacingy="4" />
+    <sodipodi:guide
+       position="0,256"
+       orientation="0.70710678,0.70710678"
+       id="guide4171"
+       inkscape:label=""
+       inkscape:color="rgb(0,0,255)" />
+  </sodipodi:namedview>
+  <metadata
+     id="metadata7">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Ebene 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(0,-796.36218)">
+    <path
+       sodipodi:nodetypes="ccccc"
+       inkscape:connector-curvature="0"
+       id="path4200"
+       d="m 8,1048.3622 49.5625,-248.00002 194.4375,0 -49.5625,248.00002 z"
+       style="fill:#000000;fill-rule:evenodd;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" />
+    <path
+       style="fill:#008000;fill-rule:evenodd;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="M 4,1048.3622 54.349206,800.36218 248,800.36218 197.6508,1048.3622 Z"
+       id="path4189"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="ccccc" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:33.20402145px;line-height:125%;font-family:Calibri;-inkscape-font-specification:Calibri;letter-spacing:0px;word-spacing:0px;fill:#ffff00;fill-opacity:1;stroke:none"
+       x="-2.8251953"
+       y="967.64001"
+       id="text3009-4-0"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan3011-3-0"
+         x="-2.8251953"
+         y="967.64001"
+         style="font-style:oblique;font-size:150px;-inkscape-font-specification:'Calibri Oblique';fill:#ffff00"><tspan
+           style="fill:none"
+           id="tspan4268">C</tspan><tspan
+           style="fill:#aade87"
+           id="tspan4272" /></tspan></text>
+    <path
+       style="opacity:0.95;fill:#e3f4d7;fill-opacity:0.95294118;stroke:#000000;stroke-width:3.00000024;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+       d="m 76.000003,812.36218 -32.363636,152 164.000003,0 32.36363,-152 -163.999997,0 z m 12.34091,14.25 133.249997,0 -26.29545,123.5 -133.250002,0 26.295455,-123.5 z"
+       id="rect4150"
+       inkscape:connector-curvature="0" />
+    <path
+       sodipodi:nodetypes="ccccccc"
+       style="fill:#e3f4d7;fill-rule:evenodd;stroke:#000000;stroke-width:2.5999999;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="m 144,836.36218 12,16 c -47.93063,20.23544 -54.34944,52.81231 -75.545451,83.5 32.206201,-30.40201 61.984331,-52.02487 95.545451,-55.5 l 18.14773,27 15.17046,-71.25 z"
+       id="path4174"
+       inkscape:connector-curvature="0" />
+    <g
+       id="g4183"
+       transform="translate(-1.6581115,37.999997)">
+      <text
+         sodipodi:linespacing="125%"
+         id="text3009"
+         y="999.74988"
+         x="17.165806"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:33.20402145px;line-height:125%;font-family:Calibri;-inkscape-font-specification:Calibri;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none"
+         xml:space="preserve"><tspan
+           style="font-style:oblique;font-size:150px;-inkscape-font-specification:'Calibri Oblique'"
+           y="999.74988"
+           x="17.165806"
+           id="tspan3011"
+           sodipodi:role="line">LM</tspan></text>
+      <text
+         sodipodi:linespacing="125%"
+         id="text3009-4"
+         y="995.74988"
+         x="13.849584"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:33.20402145px;line-height:125%;font-family:Calibri;-inkscape-font-specification:Calibri;letter-spacing:0px;word-spacing:0px;fill:#ffd42a;fill-opacity:1;stroke:none;"
+         xml:space="preserve"><tspan
+           style="font-style:oblique;font-size:150px;-inkscape-font-specification:'Calibri Oblique';fill:#ffd42a;"
+           y="995.74988"
+           x="13.849584"
+           id="tspan3011-3"
+           sodipodi:role="line">LM</tspan></text>
+    </g>
+  </g>
+</svg>

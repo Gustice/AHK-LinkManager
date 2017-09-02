@@ -13,6 +13,8 @@
 ; 		- GUI for link-menu set-up
 ;		- Basic GUI functions, no great in effort put in ergonomical design
 ;		- Several approvements in code appearence and tecnique
+; Version 0.8:
+;		- Improved useability in setup dialogue
 ;
 
 #NoEnv  		; Recommended for performance and compatibility with future AutoHotkey releases.
@@ -88,8 +90,8 @@ return
 ; End of Autostart-Section
 ;**********************************************************
 
-#Include LM_GUI.ahk
-#Include LM_FileHelper.ahk
+#Include .\Parts\LM_GUI.ahk
+#Include .\Parts\LM_FileHelper.ahk
 
 ;********************************************************************************************************************
 ; Implementation of Tray-Menu

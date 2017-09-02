@@ -90,7 +90,8 @@ return
 ; End of Autostart-Section
 ;**********************************************************
 
-#Include .\Parts\LM_GUI.ahk
+#Include .\Parts\LM_MainGUI.ahk
+#Include .\Parts\LM_AddGUI.ahk
 #Include .\Parts\LM_FileHelper.ahk
 
 ;********************************************************************************************************************
@@ -163,3 +164,84 @@ else
 return
 
 
+;********************************************************************************************************************
+; Context-Menu Functions
+; The menu is setup with recursive approach
+;********************************************************************************************************************
+CreateContextMenu(MenuTree,MenuName,MenuHandle,AllContextMenuNames)
+{
+	JumpStack := Object()
+	AllContextMenuNames[1] := MenuName
+
+	; Append first menu structure to "unrolled" menu
+	JumpStack[1, 1] := MenuName
+	JumpStack[1, 2] := MenuTree
+	
+	Loop % MenuTree.MaxIndex()
+	{
+		; Store in helper variables
+		BranchType := MenuTree[A_Index, 1]
+		BranchName := MenuTree[A_Index, 2]
+		BranchCode := MenuTree[A_Index, 3]
+		
+		; Create socond Menu level (if necessary)
+		if ( MenuTree[A_Index,4].MaxIndex() > 0)
+		{
+			BranchStruct := MenuTree[A_Index, 4]
+			NewNodeName := G_NodeIDX . "_Sub_" . BranchCode
+			
+			; Creat next level
+			JumpStack := GenMenuNode(NewNodeName, BranchStruct, JumpStack, MenuHandle, AllContextMenuNames)
+			; Append submenu if it contains valid entrys
+			Menu, %MenuName%, Add, %BranchName%, :%NewNodeName%
+		}
+		else ; otherwise create a simple entry
+		{
+			; Append entry via name of entry
+			EntityName := MenuTree[A_Index, 2]
+			Menu, %MenuName%, Add, %EntityName%, %MenuHandle%
+		}
+	}
+	
+	return JumpStack
+}
+
+GenMenuNode(NodeName, NodeTree , JumpStack, MenuHandle, AllContextMenuNames)
+{
+	newIdx := JumpStack.MaxIndex()
+	newIdx := newIdx +1
+	JumpStack[newIdx, 1] := NodeName
+	JumpStack[newIdx, 2] := NodeTree
+	
+	newNIdx := AllContextMenuNames.MaxIndex()
+	newNIdx := newNIdx +1
+	AllContextMenuNames[newNIdx] := NodeName
+	
+	Loop % NodeTree.MaxIndex()
+	{
+		; Store in helper variables
+		BranchType := NodeTree[A_Index, 1]
+		BranchName := NodeTree[A_Index, 2]
+		BranchCode := NodeTree[A_Index, 3]
+
+		; Create next Menu level (if necessary)
+		if ( NodeTree[A_Index,4].MaxIndex() > 0)
+		{
+			BranchStruct := NodeTree[A_Index, 4]
+			NewNodeName := G_NodeIDX . "_Sub_" . BranchCode
+			NumEntries := NumEntries+1
+			
+			JumpStack := GenMenuNode(NewNodeName, BranchStruct, JumpStack, MenuHandle, AllContextMenuNames)
+			; Append submenu if it contains valid entrys
+			Menu, %NodeName%, Add, %BranchName%, :%NewNodeName%
+		}
+		else ; otherwise create a simple entry
+		{
+			; Append entry via name of entry
+			EntityName := NodeTree[A_Index, 2]
+			Menu, %NodeName%, Add, %EntityName%, %MenuHandle%
+		}
+	}
+	
+	return JumpStack
+}

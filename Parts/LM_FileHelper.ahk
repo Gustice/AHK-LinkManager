@@ -1,6 +1,5 @@
 ; AHK-LinkManager Helper for file interpretation and manipulation
 
-
 ;********************************************************************************************************************
 ; Data-defines
 ; 

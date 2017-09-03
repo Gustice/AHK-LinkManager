@@ -1,6 +1,7 @@
 ; AHK-LinkManager GUI Elements
 
 
+
 ;********************************************************************************************************************
 ; PathManager GUI
 ;********************************************************************************************************************
@@ -22,21 +23,63 @@ MakeCallTable()
     Call["Move &Down"] := Func("MoveDown")
 	Call["Cut"] := Func("CutOut")
 	Call["Paste"] := Func("InsertCutOut")
+	Call["Undo"] := Func("Undo")
+	
+	Call["Show Shortcuts"] := Func("ShowShortcuts")
 
 
     Call["Preview"] := Func("PreviewContextMenu")
     Call["OK"] := Func("ManagerOK")
     Call["Cancel"] := Func("ManagerCancel")
+}
+
+
+#IfWinActive ahk_group Self
+{
+^Up::
+	GUI, PathManager:Default
+	MoveUp()
+Return
+
+^Down::
+	GUI, PathManager:Default
+	MoveDown()
+Return
+
+^X::
+	GUI, PathManager:Default
+	CutOut()
+return
+
+^V::
+	GUI, PathManager:Default
+	InsertCutOut()
+return
+
+^Del::
+	GUI, PathManager:Default
+	Remove()
+Return
+
+^Tab::
+	GUI, PathManager:Default
+	GuiControlGet, choice, ,InsertChoice
 	
-	; Add GUI
-	Call["Wähle &Ordner"] := Func("AddElementDir")
-	Call["Wähle &Datei"] := Func("AddElementFile")
+	if (choice == "Append")
+	{
+		GuiControl, ChooseString ,InsertChoice, Insert
+	}
+	else
+	{
+		GuiControl, ChooseString ,InsertChoice, Append
+	}
+Return
 }
 
 
 MakeMainGui:       
 	Gui , PathManager: Add, ListView
-        , xm w350 h480 Count15 -Multi NoSortHdr AltSubmit vMyList gGuiCall
+        , xm w350 h480 Count15 -Multi NoSortHdr AltSubmit vMyList gGuiCall HwndMainPathManagerGUI
         , Num|Name|Path
 		
 	Gui PathManager: Add, DropDownList, x+10 w75 r2 Choose1 vInsertChoice, Insert|Append
@@ -53,11 +96,34 @@ MakeMainGui:
 	Gui, PathManager: Add, Button, w75 r1 Y+15 gGuiCall, Cut
 	Gui, PathManager: Add, Button, w75 r1 gGuiCall, Paste
 	
+	; Gui, PathManager: Add, Button, w75 r1 Y+15 gGuiCall, Undo
+	
+	Gui, PathManager: Add, Button, w75 r2 Y+45 gGuiCall, Show Shortcuts
+	
     Gui, PathManager: Add, Button, xm+30 w75 r1 gGuiCall, Preview
 	Gui, PathManager: Add, Button, x+50 w75 r1 gGuiCall, OK
     Gui, PathManager: Add, Button, x+20 w75 r1 gGuiCall Default, Cancel
+	
+	WinGet, MainPathManagerGUI
+	GroupAdd Self, % "ahk_pid " DllCall("GetCurrentProcessId") ; Create an ahk_group "Self" and make all the current process's windows get into that group.
+
 return
 
+ShowShortcuts()
+{
+	Text = 
+	(Ltrim
+		Shortcuts for LinkManager GUI
+		
+		Ctrl+Tab	Change input selection Insert <=> Append
+		Ctrl+Up-Key	Move selected entity up
+		Ctrl+Down-Key	Move selected entity up
+		Ctrl+Delete-Key	Delete selected entity
+		Ctrl+X		Cut out selected entity
+		Ctrl+V		Paste cut out to selected entity
+	)
+	MsgBox, ,Shortcuts, %Text%
+}
 
 UpdateButtons()
 {
@@ -65,10 +131,6 @@ UpdateButtons()
 
     TotalNumberOfRows := LV_GetCount()
     
-    ; Make sure there is always one selected row
-    SelectedRow := LV_GetNext(0, "Focused")
-    LV_Modify(SelectedRow, "Select")
-
 	if (TotalNumberOfRows == 0)
 	{
 		GuiControl, Disable, Se&parator
@@ -140,9 +202,13 @@ ManagerCancel()
 
 ShowManagerGui()
 {
-	GUI, PathManager: Show, ,Favoriten-Verwaltung
+	GUI, PathManager: Show, ,%G_ManagerGUIname%
 	RefreshPathManager()
 	UpdateButtons()
+
+	; Make sure ther is one Entity selected at the beginning
+    SelectedRow := LV_GetNext(0, "Focused")
+    LV_Modify(SelectedRow, "Select")
 }
 
 
@@ -182,6 +248,10 @@ AddSeparator()
 	MsgBox, ,Separator, Separator not implemented yet
 }
 
+Undo()
+{
+	MsgBox, ,Undo, Undo-Operation not implemented yet
+}
 
 AddNewEntity(NewEntity)
 {
@@ -191,7 +261,7 @@ AddNewEntity(NewEntity)
     LV_GetText(Ident, RowNum, 1)
 	
 	TempTree := MenuTree
-	idx := GetObjectElement(Ident, TempTree)
+	idx := GetObjectElementByIdent(Ident, TempTree)
 	
 	GuiControlGet, choice, ,InsertChoice
 	
@@ -223,7 +293,7 @@ CutOut()
     LV_GetText(Ident, RowNum, 1)
 
 	TempTree := MenuTree
-	idx := GetObjectElement(Ident, TempTree)
+	idx := GetObjectElementByIdent(Ident, TempTree)
 	
 	CutOutElement := TempTree[idx]
 	TempTree.Remove(idx)
@@ -235,24 +305,12 @@ CutOut()
 
 InsertCutOut()
 {
-	AddNewEntity(CutOutElement)
-	ByCutting := false
-	UpdateButtons()
-}
-
-
-GetObjectElement(Ident, byref TempTree)
-{
-	Ident := LTrim(Ident, ".")
-	Ident := RTrim(Ident, "+")
-	AllIxd := StrSplit(Ident , ".")
-	LoopCnt := AllIxd.MaxIndex() - 1
-	Loop, %LoopCnt%
+	if (ByCutting == true)
 	{
-		TempTree := TempTree[AllIxd[A_Index],4]
+		ByCutting := false
+		AddNewEntity(CutOutElement)
+		UpdateButtons()
 	}
-	idx := AllIxd[AllIxd.MaxIndex()]
-	return idx 
 }
 
 
@@ -305,7 +363,7 @@ Remove()
 	; EG: 1.1   (1,4,1) 	branch to be deleted
 	; EG: 1		(1)			root node to be deleted
 	TempTree := MenuTree
-	idx := GetObjectElement(Ident, TempTree)
+	idx := GetObjectElementByIdent(Ident, TempTree)
 
 	TempTree.Remove(idx)
 	RefreshPathManager()
@@ -322,7 +380,7 @@ MoveUp()
 	; EG: 2.2   (2,4,2) 	branch to be moved up
 	; EG: 2		(2)			root node to be moved up
 	TempTree := MenuTree
-	idx := GetObjectElement(Ident, TempTree)
+	idx := GetObjectElementByIdent(Ident, TempTree)
 	
 	if (idx > 1)
 	{
@@ -331,7 +389,8 @@ MoveUp()
 		newIdx := idx-1
 		TempTree.Insert(newIdx,TreeElement)
 		RefreshPathManager()
-		LV_Modify(newRowNum,"Select")
+		
+		FindRowNumByIdentAndSelect(Ident,newIdx)
 	}
 }
 
@@ -346,7 +405,7 @@ MoveDown()
 	; EG: 1.1   (1,4,1) 	branch to be moved down
 	; EG: 1		(1)			root node to be moved down
 	TempTree := MenuTree
-	idx := GetObjectElement(Ident, TempTree)
+	idx := GetObjectElementByIdent(Ident, TempTree)
 	
 	maxIdx := TempTree.MaxIndex()
 	if (idx < maxIdx)
@@ -356,7 +415,49 @@ MoveDown()
 		newIdx := idx+1
 		TempTree.Insert(newIdx,TreeElement)
 		RefreshPathManager()
-		LV_Modify(newRowNum,"Select")
+		
+		FindRowNumByIdentAndSelect(Ident,newIdx)
+	}
+}
+
+
+GetObjectElementByIdent(byref Ident, byref TempTree)
+{
+	IdentRange := ""
+	Ident := LTrim(Ident, ".")
+
+	AllIxd := StrSplit(Ident , ".")
+	LoopCnt := AllIxd.MaxIndex() - 1
+	Loop, %LoopCnt%
+	{
+		TempTree := TempTree[AllIxd[A_Index],4]
+		IdentRange := "." . AllIxd[A_Index]
+	}
+	; Replace Last element with x to find new position of Element
+	LastElement := AllIxd[AllIxd.MaxIndex()]
+	IdentRange := "." . RegExReplace(LastElement, "[0-9]+", "x")
+	Ident := IdentRange
+	
+	idx := RTrim(AllIxd[AllIxd.MaxIndex()], "+") 
+	
+	return idx 
+}
+
+
+FindRowNumByIdentAndSelect(oldIdent,newIdx)
+{
+	newIdent := RegExReplace(oldIdent, "x", newIdx)
+	GUI, PathManager:Default
+
+	TotalNumberOfRows := LV_GetCount()
+	Loop, %TotalNumberOfRows%
+	{
+		LV_GetText(Ident, A_Index, 1)
+		if (Ident == newIdent)
+		{
+			LV_Modify(A_Index,"Select")
+			break
+		}
 	}
 }
 
@@ -373,6 +474,7 @@ PreviewContextMenu()
 TestMenuHandler: ; TestMenuHandler for debug purpose
 	MsgBox, You clicked MenuItem: %A_ThisMenuItem%, Menu: %A_ThisMenu%, MenuItemPos: %A_ThisMenuItemPos%
 return 
+
 
 DeleteAllContextMenus(byref AllContextMenuNames)
 {

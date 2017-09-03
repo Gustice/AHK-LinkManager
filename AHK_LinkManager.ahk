@@ -16,6 +16,9 @@
 ; Version 0.8:
 ;		- Improved useability in setup dialogue
 ;
+; known issues:
+; @todo What happens with GUI no Elements left (CutOut, Paste, Add Entity ...) 
+; @todo What happens on different events if Name is already used
 
 #NoEnv  		; Recommended for performance and compatibility with future AutoHotkey releases.
 SendMode Input  ; Recommended for new scripts due to its superior speed and reliability.
@@ -25,7 +28,7 @@ SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directory.
 ; Initialization of global Variables
 ;**********************************************************
 
-G_VersionString := "Version 0.70" 	; Version string
+G_VersionString := "Version 0.80" 	; Version string
 global U_IniFile := "MyLinks.ini" 	; Ini file with user links
 global MenuName := "MenuRoot"		; Name of Context menu root
 global SYS_NewLine := "`r`n" 		; Definition for New Line
@@ -34,6 +37,7 @@ global G_NBranchKey := "Branch"		; Keyword for Branch-Definition in ini-File
 global G_NLeafKey 	:= "Leaf"		; Keyword for Branch-Definition in ini-File
 global G_NSepKey 	:= "Separator"	; Keyword for Seperator-Definition in ini-File
 
+global G_ManagerGUIname := "LinkManager Setup"
 global G_MAX_MenuDepth := 10		; Defines maximum count of Menu levels. "1" means there are no nodes allowed
 
 Menu, Tray, Icon, shell32.dll, 4 	; Changes Tray-Icon to build in icons (see C:\Windows\System32\shell32.dll)
@@ -83,7 +87,9 @@ gosub MakeMainGui
 
 GUI, AddElement: new, +OwnerPathManager
 gosub MakeAddDialog
-;ShowManagerGui()
+
+
+; ShowManagerGui()
 
 return
 ;**********************************************************
@@ -245,3 +251,4 @@ GenMenuNode(NodeName, NodeTree , JumpStack, MenuHandle, AllContextMenuNames)
 	
 	return JumpStack
 }
+

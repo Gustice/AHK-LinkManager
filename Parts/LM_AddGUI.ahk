@@ -3,28 +3,49 @@
 ;********************************************************************************************************************
 ; AddElement GUI
 ;********************************************************************************************************************
+
 MakeAddDialog:
 	GUI, AddElement: -SysMenu 
 	Gui, AddElement: Add, Text, x10 y10 w50, Name
-	Gui, AddElement: Add, Edit, x10 yp w400 xp60 vNewEntryName, Beispiel Name
+	Gui, AddElement: Add, Edit, x10 yp w400 xp60 vNewEntryName, Sample Name
 	
-	Gui, AddElement: Add, Text, x10 yp25 w50, Pfad
+	Gui, AddElement: Add, Text, x10 yp25 w50, Path
 	Gui, AddElement: Add, Edit, x10 yp0 w400 xp60 vNewEntryPath, C:\
 	
-	Gui, AddElement: Add, button, x70 yp25 w100 gGuiCall, Wähle &Ordner
-	Gui, AddElement: Add, button, xp110 w100 gGuiCall, Wähle &Datei
+	Gui, AddElement: Add, button, x70 yp25 w100 gSelectDir, Select &directory
+	Gui, AddElement: Add, button, xp110 w100 gSelectFile, Select &file
 	
 	Gui, AddElement: Add, button, x300 yp30 w50 , &OK
 	Gui, AddElement: Add, button, xp60 yp w50 , &Abbrechen
 return
 
 
+SelectDir:
+	GUI, AddElement: submit, NoHide
+	;MsgBox, Ich sehe %NewEntryPath% und %NewEntryName%
+	Gui, AddElement: +OwnDialogs
+
+	SplitPath, NewEntryPath, OutFileName, OutDir
+	selectedPath := GetValidPath(OutDir,"Dir")
+	GuiControl, , NewEntryPath, %selectedPath%
+
+return
+
+
+SelectFile:
+	GUI, AddElement: submit, NoHide
+	;MsgBox, Ich sehe %NewEntryPath% und %NewEntryName%
+
+	selectedPath := GetValidPath(NewEntryPath,"File")
+	GuiControl, , NewEntryPath, %selectedPath%
+
+return
+
 ShowAddDialog()
 {
 	Gui PathManager: +OwnDialogs
     Gui, AddElement: Show, , Add new path
 }
-
 
 AddElementButtonOK:
 	GUI, AddElement: submit
@@ -33,42 +54,25 @@ AddElementButtonOK:
 	NewEntity[1] := G_NLeafKey
 	NewEntity[2] := NewEntryName
 	NewEntity[3] := NewEntryPath
-	
-	Gui PathManager: -Disabled
 	AddNewEntity(NewEntity)	
+
+	GuiControl, AddElement: ,NewEntryName, Sample Name
+	GuiControl, AddElement: ,NewEntryPath, C:\
+
+	Gui, PathManager: -Disabled
 	GUI, PathManager: Show
 return
 
 
 AddElementButtonAbbrechen:
 	GUI, AddElement: submit
-	Gui PathManager: -Disabled
+	GuiControl, AddElement: ,NewEntryName, Sample Name
+	GuiControl, AddElement: ,NewEntryPath, C:\
+
+	Gui, PathManager: -Disabled
+	GUI, PathManager: Show
+
 return
-
-
-AddElementDir()
-{
-	global
-	GUI, AddElement: submit, NoHide
-	;MsgBox, Ich sehe %NewEntryPath% und %NewEntryName%
-	Gui, AddElement: +OwnDialogs
-
-	SplitPath, NewEntryPath, OutFileName, OutDir
-	selectedPath := GetValidPath(OutDir,"Dir")
-	GuiControl, , NewEntryPath, %selectedPath%
-}
-
-
-AddElementFile()
-{
-	global
-	GUI, AddElement: submit, NoHide
-	;MsgBox, Ich sehe %NewEntryPath% und %NewEntryName%
-
-	selectedPath := GetValidPath(NewEntryPath,"File")
-	GuiControl, , NewEntryPath, %selectedPath%
-}
-
 
 GetValidPath(startPath,pathType)
 {

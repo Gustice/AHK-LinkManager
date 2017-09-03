@@ -15,6 +15,9 @@
 ;		- Several approvements in code appearence and tecnique
 ; Version 0.8:
 ;		- Improved useability in setup dialogue
+;			- Shortcut to main-gui added
+;			- Add-Gui resets when OK or cancel is hit
+;		- Seperator added
 ;
 ; known issues:
 ; @todo What happens with GUI no Elements left (CutOut, Paste, Add Entity ...) 

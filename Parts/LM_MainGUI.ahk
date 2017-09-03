@@ -75,7 +75,7 @@ Return
 	}
 Return
 }
-
+#IfWinActive
 
 MakeMainGui:       
 	Gui , PathManager: Add, ListView
@@ -86,7 +86,7 @@ MakeMainGui:
 		
 	Gui, PathManager: Add, Button, w75 r1 Y+15 gGuiCall, Add &Section
 	Gui, PathManager: Add, Button, w75 r1 gGuiCall, Add &Entity
-	; Gui, PathManager: Add, Button, w75 r1 gGuiCall, Add Se&parator
+	Gui, PathManager: Add, Button, w75 r1 gGuiCall, Add Se&parator
     
 	Gui, PathManager: Add, Button, w75 r1 Y+15 gGuiCall, Remove
     
@@ -245,7 +245,11 @@ AddEntity()
 
 AddSeparator()
 {
-	MsgBox, ,Separator, Separator not implemented yet
+	NewEntity := Object()
+	NewEntity[1] := G_NSepKey
+	NewEntity[2] := 
+	NewEntity[3] := 
+	AddNewEntity(NewEntity)	
 }
 
 Undo()

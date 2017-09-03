@@ -123,13 +123,19 @@ DecodeArrayEntry(cline)
 	StringRight, ucommand, cline, StrLen(cline) - pos2
 	; Strore definitions
 	
+	;normalize name
 	if ( RegExMatch(utype, G_NBranchKey) == 1)
 	{
-		arrayElem[1] := G_NBranchKey		;normalize name
+		arrayElem[1] := G_NBranchKey
+	}
+	else if ( ( RegExMatch(utype, G_NSepKey) == 1)
+		|| ((name=="") && (ucommand=="")) )
+	{
+		arrayElem[1] := G_NSepKey
 	}
 	else
 	{
-		arrayElem[1] := G_NLeafKey			;normalize name
+		arrayElem[1] := G_NLeafKey
 	}
 	arrayElem[2] := name
 	arrayElem[3] := ucommand
@@ -173,24 +179,45 @@ ReturnDefaultHeader()
 	( Ltrim
 	; Configuration File: Do Not Edit
 	[User_Config]
-	; Following characters are possible 
+	; Following characters are possible
 	; # (Windows)
 	; ! (Alt)
 	; ^ (Control)
 	; + (Shift)
 	; <^>! (AltGr)
+	; Aso other Buttons like Mousebutton is possible (see AHK-help)
 	; Example: #^V (Win+Control+V)
 	ShortKey=#!J
 	; Already used shortcuts ar shown in https://support.microsoft.com/de-de/help/12445/windows-keyboard-shortcuts
 	Root=Menu_Root
 
-	; Deklaratoin of branches (Keyword Branch is Mandatory)
+	; Declaratoin of branches (Keyword Branch is Mandatory)
 	; Syntax: "BranchXY"="BranchName"|"Path"
-	; Deklaratoin of entrys
+	; Declaratoin of entrys
 	; Syntax: "key"="LeafName"|"Path"
+	; Declaration of separators 
+	; Separator=*empty*
 	[Menu_Root]
 	)
  return IniFileHeader
+}
+
+
+ReturnHelpText()
+{
+	HelpText = 
+	( Ltrim
+	Autohotkey LinkManager is a small tool to handle frequently used directories, files, documents, links etc.
+	
+	By pressing Win+Alt+J (default setting) a context menu pops up and let you chose your entry with cursor keys or with your mouse. 
+	The shortcut which pops up the context menu can be modified in iniFile (see section “User_Config” key “ShortKey”)
+	The actual context menu can be set up with a GUI by selecting “Setup” in the tray menu (right click on icon in system tray)
+	
+	Credits:
+	Initial Author: Jakob Gegeniger
+	GUI several features are partly copied/inspired from Robert Ryan (Script: FavoritFolders.ahk)
+	)
+return HelpText
 }
 
 

@@ -22,6 +22,8 @@
 ; known issues:
 ; @todo What happens with GUI no Elements left (CutOut, Paste, Add Entity ...) 
 ; @todo What happens on different events if Name is already used
+; @todo GUI-function to modifiy user defined shortcut
+; @tood Undo-Operation is needed
 
 #NoEnv  		; Recommended for performance and compatibility with future AutoHotkey releases.
 SendMode Input  ; Recommended for new scripts due to its superior speed and reliability.
@@ -57,6 +59,7 @@ if (U_ShortCut != "")
 } else
 { ;In case of missing definition use default
 	Hotkey, #!J, RunMenu, On
+	U_ShortCut := "#!J"
 }
 
 ;**********************************************************
@@ -125,7 +128,8 @@ TrayMenuHandler:
 	}
 	else if (A_ThisMenuItem == "Help")
 	{
-		MsgBox,% "Default shortcut is Win+Alt+J" or Win+MidMouseButton
+		helptext := ReturnHelpText()
+		MsgBox, , Help, %helptext%
 	}
 return
 
@@ -160,7 +164,6 @@ Loop % JumpStack.MaxIndex()
 return
 
 ; Ways to show Context Menu
-#MButton::
 RunMenu:
 if (MenuTree.MaxIndex() > 0)
 {

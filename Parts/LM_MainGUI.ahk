@@ -165,9 +165,12 @@ UpdateButtons()
 
 ManagerOK()
 {
+	global U_ShortCut
+
 	GUI, PathManager: submit
 	
 	SaveOldIniFile()
+	
 	
 	IniFileHeader := ReturnDefaultHeader()
 	file := FileOpen(U_IniFile, "w")
@@ -178,8 +181,13 @@ ManagerOK()
 	}
 	file.Write(IniFileHeader)
 	file.Close()
-
+	
+	
 	SaveNextNodes(MenuTree,"Menu_Root")
+	
+	; Restore User defined Shortcut for showing the context menu
+	IniWrite, %U_ShortCut%, %U_IniFile%, User_Config, ShortKey
+	
 	Reload ;Reload whole App to Refresh new Context Menus
 }
 

@@ -443,11 +443,11 @@ GetObjectElementByIdent(byref Ident, byref TempTree)
 	Loop, %LoopCnt%
 	{
 		TempTree := TempTree[AllIxd[A_Index],4]
-		IdentRange := "." . AllIxd[A_Index]
+		IdentRange := IdentRange . "." . AllIxd[A_Index]
 	}
 	; Replace Last element with x to find new position of Element
 	LastElement := AllIxd[AllIxd.MaxIndex()]
-	IdentRange := "." . RegExReplace(LastElement, "[0-9]+", "x")
+	IdentRange := IdentRange . "." . RegExReplace(LastElement, "[0-9]+", "x")
 	Ident := IdentRange
 	
 	idx := RTrim(AllIxd[AllIxd.MaxIndex()], "+") 

@@ -23,7 +23,10 @@
 ; @todo What happens with GUI no Elements left (CutOut, Paste, Add Entity ...) 
 ; @todo What happens on different events if Name is already used
 ; @todo GUI-function to modifiy user defined shortcut
-; @tood Undo-Operation is needed
+; @todo Undo-Operation is needed
+; @todo Modify dialogue for already defined entities
+; @todo Chatch routine if path is not valid
+; @todo Useability improvement by adding Keys like ESC to add-dialougues
 
 #NoEnv  		; Recommended for performance and compatibility with future AutoHotkey releases.
 SendMode Input  ; Recommended for new scripts due to its superior speed and reliability.
@@ -67,6 +70,7 @@ if (U_ShortCut != "")
 ;**********************************************************
 Menu, tray, add  ; Separator
 Menu, tray, add, Setup, TrayMenuHandler
+Menu, tray, add, Edit Ini-File, TrayMenuHandler
 Menu, tray, add, Help, TrayMenuHandler
 
 ;**********************************************************
@@ -94,8 +98,7 @@ gosub MakeMainGui
 GUI, AddElement: new, +OwnerPathManager
 gosub MakeAddDialog
 
-
-; ShowManagerGui()
+ShowManagerGui()
 
 return
 ;**********************************************************
@@ -125,6 +128,10 @@ TrayMenuHandler:
 	if (A_ThisMenuItem == "Setup")
 	{
 		ShowManagerGui()
+	}
+	else if A_ThisMenuItem == "Edit Ini-File")
+	{
+		Run myLinks.ini
 	}
 	else if (A_ThisMenuItem == "Help")
 	{

@@ -34,8 +34,7 @@ MakeCallTable()
 }
 
 
-#IfWinActive ahk_group Self
-{
+#IfWinActive ahk_group currWinIDGroup
 ^Up::
 	GUI, PathManager:Default
 	MoveUp()
@@ -74,7 +73,6 @@ Return
 		GuiControl, ChooseString ,InsertChoice, Append
 	}
 Return
-}
 #IfWinActive
 
 MakeMainGui:       
@@ -103,10 +101,6 @@ MakeMainGui:
     Gui, PathManager: Add, Button, xm+30 w75 r1 gGuiCall, Preview
 	Gui, PathManager: Add, Button, x+50 w75 r1 gGuiCall, OK
     Gui, PathManager: Add, Button, x+20 w75 r1 gGuiCall Default, Cancel
-	
-	WinGet, MainPathManagerGUI
-	GroupAdd Self, % "ahk_pid " DllCall("GetCurrentProcessId") ; Create an ahk_group "Self" and make all the current process's windows get into that group.
-
 return
 
 ShowShortcuts()
@@ -211,6 +205,10 @@ ManagerCancel()
 ShowManagerGui()
 {
 	GUI, PathManager: Show, ,%G_ManagerGUIname%
+	WinGet, currWinID, ID, A
+	GroupAdd, currWinIDGroup, ahk_id %currWinID%
+
+	
 	RefreshPathManager()
 	UpdateButtons()
 

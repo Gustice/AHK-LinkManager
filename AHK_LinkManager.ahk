@@ -71,11 +71,15 @@ if (U_ShortCut != "")
 Menu, tray, add  ; Separator
 Menu, tray, add, Setup, TrayMenuHandler
 Menu, tray, add, Edit Ini-File, TrayMenuHandler
+Menu, tray, add, Restart, TrayMenuHandler
 Menu, tray, add, Help, TrayMenuHandler
 
 ;**********************************************************
 ; Initializing of Userdefined Menu-Tree
 ;**********************************************************
+
+CheckIniFileConsitancy(U_IniFile)
+
 
 ; Decode user definitions and orgenize result in structure
 global G_LevelMem := 1
@@ -98,7 +102,7 @@ gosub MakeMainGui
 GUI, AddElement: new, +OwnerPathManager
 gosub MakeAddDialog
 
-ShowManagerGui()
+;ShowManagerGui()
 
 return
 ;**********************************************************
@@ -131,7 +135,13 @@ TrayMenuHandler:
 	}
 	else if A_ThisMenuItem == "Edit Ini-File")
 	{
+		; Open ini for setup
 		Run myLinks.ini
+	}
+	else if A_ThisMenuItem == "Restart")
+	{
+		; Restart Tool to apply changes in ini
+		Reload
 	}
 	else if (A_ThisMenuItem == "Help")
 	{

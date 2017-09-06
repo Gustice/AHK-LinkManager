@@ -94,9 +94,10 @@ ParseUsersDefinesBlocks(IniSectionName, AllSectionNames) ; Name of Menu Node (un
 			}
 			else
 			{
+				BranchCode := TreeSpecArray[A_Index, 3]
 				MsgBox, 
-				( 
-					The node %BranchCode% can not be considered because 
+				( ltrim
+					The Branch %BranchCode% can not be considered because 
 					the depth of the menu is limited to G_MAX_MenuDepth = %G_MAX_MenuDepth%
 				)
 				ExitApp 
@@ -155,7 +156,6 @@ SaveNextNodes(NodeTree,NodeSec)
 		BranchType := NodeTree[A_Index, 1]
 		BranchName := NodeTree[A_Index, 2]
 		BranchCode := NodeTree[A_Index, 3]
-			; @todo es muss geprüft werden, ob der Eintrag nicht schon vorhanden ist.
 
 		NewIndexStr := IndexStr . "." . A_Index
 
@@ -246,4 +246,29 @@ CheckIfNamesIsUsed(Names, Name)
 		MsgBox, , Debug, given names object is invalid
 	}
 	return isUsed
+}
+
+; Execute basic pre-checks only, to exclude some common mistakes
+CheckIniFileConsitancy(file)
+{
+	;; Checking if section name is used twice
+	IniRead, FileSections, %U_IniFile%
+	AllSecs := StrSplit(FileSections ,"`n")	; can't figure out why in this case only NewLine is neccessary
+	LoopCnt := AllSecs.MaxIndex() - 1
+	Loop, %LoopCnt%
+	{
+		CompareSec := AllSecs[A_Index]
+		startIdx := A_Index
+		SubLoopCnt := LoopCnt - A_Index
+		
+		Loop, %SubLoopCnt%
+		{
+			comIdx := startIdx + A_Index 
+			if (AllSecs[comIdx] == 	CompareSec) 
+			{
+				MsgBox, , Critical Error, Section name %CompareSec% is used twice in ini-file
+				ExitApp
+			}
+		}
+	}
 }

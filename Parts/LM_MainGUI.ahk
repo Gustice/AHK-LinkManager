@@ -199,6 +199,12 @@ SaveOldIniFile()
 ManagerCancel()
 {
 	GUI, PathManager: submit
+	
+	if (MenuTree.MaxIndex() > 0)
+	{
+		DeleteAllContextMenus(AllContextMenuNames)
+		JumpStack := CreateContextMenu(MenuTree,MenuName,"MenuHandler",AllContextMenuNames)
+	}
 }
 
 

@@ -177,7 +177,7 @@ ManagerOK()
 	file.Close()
 	
 	
-	SaveNextNodes(MenuTree,"Menu_Root")
+	SaveNextNodes(G_MenuTree,"Menu_Root")
 	
 	; Restore User defined Shortcut for showing the context menu
 	IniWrite, %U_ShortCut%, %U_IniFile%, User_Config, ShortKey
@@ -196,15 +196,17 @@ SaveOldIniFile()
 	FileCopy, %U_IniFile%, %BackIniFile% 
 }
 
+PathManagerGuiClose:
+PathManagerGuiEscape:
+ManagerCancel()
+return 
+
 ManagerCancel()
 {
 	GUI, PathManager: submit
 	
-	if (MenuTree.MaxIndex() > 0)
-	{
-		DeleteAllContextMenus(AllContextMenuNames)
-		JumpStack := CreateContextMenu(MenuTree,MenuName,"MenuHandler",AllContextMenuNames)
-	}
+	DeleteAllContextMenus(AllContextMenuNames)
+	JumpStack := CreateContextMenu(G_MenuTree,G_MenuName,"MenuHandler",AllContextMenuNames)
 }
 
 
@@ -276,7 +278,7 @@ AddNewEntity(NewEntity)
 	RowNum := LV_GetNext()
     LV_GetText(Ident, RowNum, 1)
 	
-	TempTree := MenuTree
+	TempTree := G_MenuTree
 	idx := GetObjectElementByIdent(Ident, TempTree)
 	
 	GuiControlGet, choice, ,InsertChoice
@@ -308,7 +310,7 @@ CutOut()
 	RowNum := LV_GetNext()
     LV_GetText(Ident, RowNum, 1)
 
-	TempTree := MenuTree
+	TempTree := G_MenuTree
 	idx := GetObjectElementByIdent(Ident, TempTree)
 	
 	CutOutElement := TempTree[idx]
@@ -335,7 +337,7 @@ RefreshPathManager()
 	GUI, PathManager:Default
 	LV_Delete()
 	
-	AppendNextNodes("", MenuTree)
+	AppendNextNodes("", G_MenuTree)
 	LV_ModifyCol()
 }
 
@@ -378,7 +380,7 @@ Remove()
 	; EG: 1.1.1 (1,4,1,4,1) last Element to be deleted (if last index is leaf)
 	; EG: 1.1   (1,4,1) 	branch to be deleted
 	; EG: 1		(1)			root node to be deleted
-	TempTree := MenuTree
+	TempTree := G_MenuTree
 	idx := GetObjectElementByIdent(Ident, TempTree)
 
 	TempTree.Remove(idx)
@@ -395,7 +397,7 @@ MoveUp()
 	; EG: 2.2.2 (2,4,2,4,2) last Element to be moved up
 	; EG: 2.2   (2,4,2) 	branch to be moved up
 	; EG: 2		(2)			root node to be moved up
-	TempTree := MenuTree
+	TempTree := G_MenuTree
 	idx := GetObjectElementByIdent(Ident, TempTree)
 	
 	if (idx > 1)
@@ -420,7 +422,7 @@ MoveDown()
 	; EG: 1.1.1 (1,4,1,4,1) last Element to be moved down
 	; EG: 1.1   (1,4,1) 	branch to be moved down
 	; EG: 1		(1)			root node to be moved down
-	TempTree := MenuTree
+	TempTree := G_MenuTree
 	idx := GetObjectElementByIdent(Ident, TempTree)
 	
 	maxIdx := TempTree.MaxIndex()
@@ -480,11 +482,11 @@ FindRowNumByIdentAndSelect(oldIdent,newIdx)
 
 PreviewContextMenu()
 {
-	if (MenuTree.MaxIndex() > 0)
+	if (G_MenuTree.MaxIndex() > 0)
 	{
 		DeleteAllContextMenus(AllContextMenuNames)
-		CreateContextMenu(MenuTree,MenuName,"TestMenuHandler",AllContextMenuNames)
-		Menu, %MenuName%, Show 
+		CreateContextMenu(G_MenuTree,G_MenuName,"TestMenuHandler",AllContextMenuNames)
+		Menu, %G_MenuName%, Show 
 	}
 }
 TestMenuHandler: ; TestMenuHandler for debug purpose

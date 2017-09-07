@@ -18,6 +18,7 @@
 ;			- Shortcut to main-gui added
 ;			- Add-Gui resets when OK or cancel is hit
 ;		- Seperator added
+;		- File-checks on loading
 ;
 ; known issues:
 ; @todo What happens with GUI no Elements left (CutOut, Paste, Add Entity ...) 
@@ -38,7 +39,7 @@ SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directory.
 
 G_VersionString := "Version 0.80" 	; Version string
 global U_IniFile := "MyLinks.ini" 	; Ini file with user links
-global MenuName := "MenuRoot"		; Name of Context menu root
+global G_MenuName := "MenuRoot"		; Name of Context menu root
 global SYS_NewLine := "`r`n" 		; Definition for New Line
 
 global G_NBranchKey := "Branch"		; Keyword for Branch-Definition in ini-File
@@ -77,18 +78,19 @@ Menu, tray, add, Help, TrayMenuHandler
 ;**********************************************************
 ; Initializing of Userdefined Menu-Tree
 ;**********************************************************
-
-CheckIniFileConsitancy(U_IniFile)
-
+global AllSectionNames := Object()
+AllSectionNames := CheckIniFileSections(U_IniFile)
 
 ; Decode user definitions and orgenize result in structure
 global G_LevelMem := 1
-global AllSectionNames := Object()
 global AllContextMenuNames := Object()
-global MenuTree := ParseUsersDefinesBlock(AllSectionNames)
+
+ParentNames := Object()
+ParentNames[1] := G_MenuName
+global G_MenuTree := ParseUsersDefinesBlock(ParentNames)
 
 ; Create context menu
-JumpStack := CreateContextMenu(MenuTree,MenuName,"MenuHandler",AllContextMenuNames)
+JumpStack := CreateContextMenu(G_MenuTree,G_MenuName,"MenuHandler",AllContextMenuNames)
 
 global CutOutElement := Object()
 global ByCutting := false
@@ -133,12 +135,12 @@ TrayMenuHandler:
 	{
 		ShowManagerGui()
 	}
-	else if A_ThisMenuItem == "Edit Ini-File")
+	else if (A_ThisMenuItem == "Edit Ini-File")
 	{
 		; Open ini for setup
 		Run myLinks.ini
 	}
-	else if A_ThisMenuItem == "Restart")
+	else if (A_ThisMenuItem == "Restart")
 	{
 		; Restart Tool to apply changes in ini
 		Reload
@@ -182,9 +184,9 @@ return
 
 ; Ways to show Context Menu
 RunMenu:
-if (MenuTree.MaxIndex() > 0)
+if (G_MenuTree.MaxIndex() > 0)
 {
-	Menu, %MenuName%, Show 
+	Menu, %G_MenuName%, Show 
 }
 else
 {

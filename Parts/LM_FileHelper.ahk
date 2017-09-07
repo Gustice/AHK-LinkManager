@@ -32,9 +32,8 @@
 ; "key"="LeafName"|"Path"
 ; if key is branch then path is name of next section
 ;********************************************************************************************************************
-ParseUsersDefinesBlock(AllSectionNames)
+ParseUsersDefinesBlock(ParentNames)
 {
-	AllSectionNames[1] := MenuName
 	TreeSpecArray := Object()
   
 	; Read out user defined Tree-Structure
@@ -48,26 +47,27 @@ ParseUsersDefinesBlock(AllSectionNames)
 		BranchType := TreeSpecArray[A_Index,1]
 		if ( RegExMatch(BranchType, G_NBranchKey) == 1) 
 		{
-			; Memorize all Branche-Codes, to pares used Names later
-			nextIdx := AllSectionNames.MaxIndex()+1
-			AllSectionNames[nextIdx] := TreeSpecArray[A_Index,3]
-		
+			ParentNames[ParentNames.MaxIndex()+1] := TreeSpecArray[A_Index,3]
+			CheckParentsForRecursion(ParentNames)
+
 			if (G_LevelMem < G_MAX_MenuDepth)
 			{
 				BranchCode := TreeSpecArray[A_Index, 3]
-				TreeSpecArray[A_Index,4] := ParseUsersDefinesBlocks(BranchCode,AllSectionNames)
+				TreeSpecArray[A_Index,4] := ParseUsersDefinesBlocks(BranchCode,ParentNames)
 			}
 			else
 			{
-				MsgBox No Nodes are allowed if G_MAX_MenuDepth is set to 1
+				MsgBox, , Autohotkey LinkManager, No Nodes are allowed if G_MAX_MenuDepth is set to 1
 			}
+			
+			ParentNames.Remove(ParentNames.MaxIndex())
 		}
 	}
 	return TreeSpecArray
 }
 
 
-ParseUsersDefinesBlocks(IniSectionName, AllSectionNames) ; Name of Menu Node (unique), SectionName in IniFile
+ParseUsersDefinesBlocks(IniSectionName, ParentNames) ; Name of Menu Node (unique), SectionName in IniFile
 {
 	TreeSpecArray := Object()
 	G_LevelMem := G_LevelMem +1	;Store current MenuDepth:
@@ -82,26 +82,27 @@ ParseUsersDefinesBlocks(IniSectionName, AllSectionNames) ; Name of Menu Node (un
 		BranchType := TreeSpecArray[A_Index,1]
 		if ( RegExMatch(BranchType, G_NBranchKey) == 1)
 		{
-			; Memorize all Branche-Codes, to pares used Names later
-			nextIdx := AllSectionNames.MaxIndex()+1
-			AllSectionNames[nextIdx] := TreeSpecArray[A_Index,3]
+			BranchCode := TreeSpecArray[A_Index, 3]
 
-			; Check wheter this Note hits the depth restriction
+			ParentNames[ParentNames.MaxIndex()+1] := BranchCode
+			CheckParentsForRecursion(ParentNames)
+			
+			; Check wheter this branch hits the depth restriction
 			if (G_LevelMem < G_MAX_MenuDepth)
 			{
-				BranchCode := TreeSpecArray[A_Index, 3]
-				TreeSpecArray[A_Index,4] := ParseUsersDefinesBlocks(BranchCode,AllSectionNames)
+				TreeSpecArray[A_Index,4] := ParseUsersDefinesBlocks(BranchCode,ParentNames)
 			}
 			else
 			{
-				BranchCode := TreeSpecArray[A_Index, 3]
-				MsgBox, 
+				MsgBox, , Autohotkey LinkManager Critical error
 				( ltrim
 					The Branch %BranchCode% can not be considered because 
 					the depth of the menu is limited to G_MAX_MenuDepth = %G_MAX_MenuDepth%
 				)
 				ExitApp 
 			}
+			
+			ParentNames.Remove(ParentNames.MaxIndex())
 		}
 	}
 	G_LevelMem := G_LevelMem -1	;ReStore current MenuDepth:
@@ -248,10 +249,9 @@ CheckIfNamesIsUsed(Names, Name)
 	return isUsed
 }
 
-; Execute basic pre-checks only, to exclude some common mistakes
-CheckIniFileConsitancy(file)
+; Checking if section name is used twice
+CheckIniFileSections(file)
 {
-	;; Checking if section name is used twice
 	IniRead, FileSections, %U_IniFile%
 	AllSecs := StrSplit(FileSections ,"`n")	; can't figure out why in this case only NewLine is neccessary
 	LoopCnt := AllSecs.MaxIndex() - 1
@@ -259,14 +259,41 @@ CheckIniFileConsitancy(file)
 	{
 		CompareSec := AllSecs[A_Index]
 		startIdx := A_Index
-		SubLoopCnt := LoopCnt - A_Index
+		SubLoopCnt := LoopCnt - A_Index + 1
 		
 		Loop, %SubLoopCnt%
 		{
 			comIdx := startIdx + A_Index 
 			if (AllSecs[comIdx] == 	CompareSec) 
 			{
-				MsgBox, , Critical Error, Section name %CompareSec% is used twice in ini-file
+				MsgBox, , Autohotkey LinkManager Critical Error, Section name %CompareSec% is used twice in ini-file
+				ExitApp
+			}
+		}
+	}
+	
+	return AllSecs
+}
+
+CheckParentsForRecursion(parents)
+{
+	LoopCnt := parents.MaxIndex() - 1
+	YoungParent := parents[parents.MaxIndex()]
+	ParentTree := ""
+	
+	Loop, %LoopCnt%
+	{
+		if (parents[A_Index] == YoungParent) 
+		{
+			if (parents[comIdx] == 	CompareSec) 
+			{
+				; Generate 
+				Loop, %LoopCnt%
+				{
+					ParentTree := ParentTree . parents[A_Index] . " ->"
+				}
+				ParentTree := ParentTree . parents[parents.MaxIndex()]
+				MsgBox, , Autohotkey LinkManager Critical Error, Recursion spottet in: %ParentTree%
 				ExitApp
 			}
 		}

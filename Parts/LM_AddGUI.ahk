@@ -51,9 +51,9 @@ AddElementButtonOK:
 	GUI, AddElement: submit
 	
 	NewEntity := Object()
-	NewEntity[1] := G_NLeafKey
-	NewEntity[2] := NewEntryName
-	NewEntity[3] := NewEntryPath
+	NewEntity["key"] := G_NLeafKey
+	NewEntity["name"] := NewEntryName
+	NewEntity["link"] := NewEntryPath
 	AddNewEntity(NewEntity)	
 
 	GuiControl, AddElement: ,NewEntryName, Sample Name

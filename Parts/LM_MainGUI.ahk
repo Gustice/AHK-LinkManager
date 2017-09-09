@@ -18,6 +18,7 @@ MakeCallTable()
 	Call["Add &Entity"] := Func("AddEntity")
 	Call["Add Se&parator"] := Func("AddSeparator")
 
+	Call["Modify"] := Func("ModifyEntity")
 	Call["Remove"] := Func("Remove")
     Call["Move &Up"] := Func("MoveUp")
     Call["Move &Down"] := Func("MoveDown")
@@ -27,8 +28,6 @@ MakeCallTable()
 	
 	Call["Show Shortcuts"] := Func("ShowShortcuts")
 
-
-    Call["Preview"] := Func("PreviewContextMenu")
     Call["OK"] := Func("ManagerOK")
     Call["Cancel"] := Func("ManagerCancel")
 }
@@ -76,9 +75,8 @@ Return
 #IfWinActive
 
 MakeMainGui:       
-	Gui , PathManager: Add, ListView
-        , xm w350 h480 Count15 -Multi NoSortHdr AltSubmit vMyList gGuiCall HwndMainPathManagerGUI
-        , Num|Name|Path
+	Gui , PathManager: Add, TreeView
+        , xm w350 h480 Count15 -Multi vMyList gGuiCall HwndMainPathManagerGUI
 		
 	Gui PathManager: Add, DropDownList, x+10 w75 r2 Choose1 vInsertChoice, Insert|Append
 		
@@ -86,6 +84,7 @@ MakeMainGui:
 	Gui, PathManager: Add, Button, w75 r1 gGuiCall, Add &Entity
 	Gui, PathManager: Add, Button, w75 r1 gGuiCall, Add Se&parator
     
+	Gui, PathManager: Add, Button, w75 r1 Y+15 gGuiCall, Modify
 	Gui, PathManager: Add, Button, w75 r1 Y+15 gGuiCall, Remove
     
     Gui, PathManager: Add, Button, w75 r1 Y+15 gGuiCall, Move &Up
@@ -98,8 +97,7 @@ MakeMainGui:
 	
 	Gui, PathManager: Add, Button, w75 r2 Y+45 gGuiCall, Show Shortcuts
 	
-    Gui, PathManager: Add, Button, xm+30 w75 r1 gGuiCall, Preview
-	Gui, PathManager: Add, Button, x+50 w75 r1 gGuiCall, OK
+	Gui, PathManager: Add, Button, xm+50 w75 r1 gGuiCall, OK
     Gui, PathManager: Add, Button, x+20 w75 r1 gGuiCall Default, Cancel
 return
 
@@ -123,7 +121,7 @@ UpdateButtons()
 {
 	Critical
 
-    TotalNumberOfRows := LV_GetCount()
+    TotalNumberOfRows := TV_GetCount()
     
 	if (TotalNumberOfRows == 0)
 	{
@@ -205,7 +203,6 @@ ManagerCancel()
 {
 	GUI, PathManager: submit
 	
-	DeleteAllContextMenus(AllContextMenuNames)
 	JumpStack := CreateContextMenu(G_MenuTree,G_MenuName,"MenuHandler",AllContextMenuNames)
 }
 
@@ -216,13 +213,11 @@ ShowManagerGui()
 	WinGet, currWinID, ID, A
 	GroupAdd, currWinIDGroup, ahk_id %currWinID%
 
-	
 	RefreshPathManager()
-	UpdateButtons()
 
 	; Make sure ther is one Entity selected at the beginning
-    SelectedRow := LV_GetNext(0, "Focused")
-    LV_Modify(SelectedRow, "Select")
+;@todo	SelectedRow := LV_GetNext(0, "Focused")
+;@todo	LV_Modify(SelectedRow, "Select")
 }
 
 
@@ -235,8 +230,8 @@ AddSection()
         return
 
 	NewEntity := Object()
-	NewEntity[1] := G_NBranchKey
-	NewEntity[2] := RegExReplace(SecName, "[^A-Za-z0-9_]", "_")
+	NewEntity["key"] := G_NBranchKey
+	NewEntity["name"] := RegExReplace(SecName, "[^A-Za-z0-9_]", "_")
 	
 	SecName := SecName . "_sec"
 	isalreadyUsed := CheckIfNamesIsUsed(AllSectionNames, SecName)
@@ -244,11 +239,12 @@ AddSection()
 	{
 		SecName := "_a" . SecName
 	}
-	NewEntity[3] := SecName
-	NewEntity[4] := Object()
+	NewEntity["link"] := SecName
+	NewEntity["sub"] := Object()
 
 	AddNewEntity(NewEntity)
 }
+
 
 AddEntity()
 {
@@ -260,11 +256,12 @@ AddEntity()
 AddSeparator()
 {
 	NewEntity := Object()
-	NewEntity[1] := G_NSepKey
-	NewEntity[2] := 
-	NewEntity[3] := 
+	NewEntity["key"] := G_NSepKey
+	NewEntity["name"] := 
+	NewEntity["link"] := 
 	AddNewEntity(NewEntity)	
 }
+
 
 Undo()
 {
@@ -274,18 +271,12 @@ Undo()
 AddNewEntity(NewEntity)
 {
 	global
-	GUI, PathManager:Default
-	RowNum := LV_GetNext()
-    LV_GetText(Ident, RowNum, 1)
-	
-	TempTree := G_MenuTree
-	idx := GetObjectElementByIdent(Ident, TempTree)
+	GetParentAndIndex(TempTree, idx)
 	
 	GuiControlGet, choice, ,InsertChoice
-	
 	if ( (choice == "Append") && ( IsAppendToSectionPossible(TempTree[idx]) == true) )
 	{
-		TempTree[idx,4].Insert(1,NewEntity)
+		TempTree[idx,"sub"].Insert(1,NewEntity)
 	}
 	else
 	{
@@ -297,27 +288,21 @@ AddNewEntity(NewEntity)
 
 IsAppendToSectionPossible(TempTree)
 {
-	if (IsObject(TempTree[4]))
+	if (IsObject(TempTree["sub"]))
 	{
 		return true
 	}
 	return false
 }
 
-
 CutOut()
 {
-	RowNum := LV_GetNext()
-    LV_GetText(Ident, RowNum, 1)
-
-	TempTree := G_MenuTree
-	idx := GetObjectElementByIdent(Ident, TempTree)
+	GetParentAndIndex(TempTree, idx)
 	
 	CutOutElement := TempTree[idx]
 	TempTree.Remove(idx)
 	RefreshPathManager()
 	ByCutting := true
-	UpdateButtons()
 }
 
 
@@ -327,7 +312,6 @@ InsertCutOut()
 	{
 		ByCutting := false
 		AddNewEntity(CutOutElement)
-		UpdateButtons()
 	}
 }
 
@@ -335,172 +319,127 @@ InsertCutOut()
 RefreshPathManager()
 {
 	GUI, PathManager:Default
-	LV_Delete()
+	SampleTreeSettings()
+
+	TV_Delete()
+	Root := TV_Add("CM",, "Expand")
 	
-	AppendNextNodes("", G_MenuTree)
-	LV_ModifyCol()
+	G_CallTree := Object()
+	Item := Object()
+	Item["data"] := G_MenuTree
+	Item["idx"] := 0
+	G_CallTree[Root] :=Item
+		
+	AppendNextNodes(G_CallTree, Root, G_MenuTree["sub"])
 }
 
 
-AppendNextNodes(IndexStr, NodeTree)
+SampleTreeSettings()
 {
+	temp := G_CallTree.Pop()
+	while (temp)
+	{
+		tst := TV_Get(temp["item"], "E")
+		if (tst > 0)
+		{
+			temp["data","gui"] := "Expand"
+		}
+		temp := G_CallTree.Pop()
+	}
+}
+
+
+AppendNextNodes(callTree, Parent, NodeTree)
+{
+	childObj := Object()
+
 	Loop % NodeTree.MaxIndex()
 	{
-		; Store in helper variables
-		BranchType := NodeTree[A_Index, 1]
-		BranchName := NodeTree[A_Index, 2]
-		BranchCode := NodeTree[A_Index, 3]
-		NewIndexStr := IndexStr . "." . A_Index
-
-		; Create next Menu level (if necessary)
-		if ( NodeTree[A_Index,4].MaxIndex() > 0)
+		Item := Object()
+		Item["data"] := NodeTree[A_Index]
+		Item["idx"] := A_Index
+		Item["parent"] := Parent
+		
+		Attr := NodeTree[A_Index,"gui"]
+		if ( NodeTree[A_Index,"sub"].MaxIndex() > 0)
 		{
-			BranchStruct := NodeTree[A_Index, 4]
-			LV_Add("Select Focus", NewIndexStr . "+", BranchName, BranchCode)
-			AppendNextNodes(NewIndexStr, BranchStruct)
+			BranchName := NodeTree[A_Index, "name"]
+			BranchStruct := NodeTree[A_Index, "sub"]
+			newItem := TV_Add(BranchName, Parent, Attr)
+			Item["childs"] := AppendNextNodes(callTree, newItem, BranchStruct)
 		}
 		else ; otherwise create a simple entry
 		{
-			if ( IsObject(NodeTree[A_Index,4]) )
-			{
-				NewIndexStr := NewIndexStr . "+"
-			}
-			EntityName := NodeTree[A_Index, 2]
-			LV_Add("Select Focus", NewIndexStr, EntityName, BranchCode)
+			EntityName := NodeTree[A_Index, "name"]
+			newItem := TV_Add(EntityName, Parent, Attr)
 		}
+		Item["item"] := newItem
+		callTree[newItem] :=Item
+		childObj[newItem] := Item
+
 	}
+	return childObj
 }
 
 
 Remove()
 {
-	RowNum := LV_GetNext()
-    LV_GetText(Ident, RowNum, 1)
-	
-	; EG: 1.1.1 (1,4,1,4,1) last Element to be deleted (if last index is leaf)
-	; EG: 1.1   (1,4,1) 	branch to be deleted
-	; EG: 1		(1)			root node to be deleted
-	TempTree := G_MenuTree
-	idx := GetObjectElementByIdent(Ident, TempTree)
+	GetParentAndIndex(TempTree, idx)
 
 	TempTree.Remove(idx)
 	RefreshPathManager()
 }
 
 
+ModifyEntity()
+{
+	MsgBox, , Error, Not implemented yet
+}
+
 MoveUp()
 {	
-	RowNum := LV_GetNext()
-    LV_GetText(Ident, RowNum, 1)
-	newRowNum := RowNum-1
+	GetParentAndIndex(TempTree, idx)
 
-	; EG: 2.2.2 (2,4,2,4,2) last Element to be moved up
-	; EG: 2.2   (2,4,2) 	branch to be moved up
-	; EG: 2		(2)			root node to be moved up
-	TempTree := G_MenuTree
-	idx := GetObjectElementByIdent(Ident, TempTree)
-	
 	if (idx > 1)
 	{
 		TreeElement := TempTree[idx]
 		TempTree.Remove(idx)
 		newIdx := idx-1
 		TempTree.Insert(newIdx,TreeElement)
-		RefreshPathManager()
 		
-		FindRowNumByIdentAndSelect(Ident,newIdx)
+		RefreshPathManager()
 	}
 }
 
 
 MoveDown()
 {
-	RowNum := LV_GetNext()
-    LV_GetText(Ident, RowNum, 1)
-	newRowNum := RowNum+1
+	GetParentAndIndex(TempTree, idx)
 
-	; EG: 1.1.1 (1,4,1,4,1) last Element to be moved down
-	; EG: 1.1   (1,4,1) 	branch to be moved down
-	; EG: 1		(1)			root node to be moved down
-	TempTree := G_MenuTree
-	idx := GetObjectElementByIdent(Ident, TempTree)
-	
 	maxIdx := TempTree.MaxIndex()
 	if (idx < maxIdx)
-	{
+	{		
 		TreeElement := TempTree[idx]
 		TempTree.Remove(idx)
 		newIdx := idx+1
 		TempTree.Insert(newIdx,TreeElement)
-		RefreshPathManager()
 		
-		FindRowNumByIdentAndSelect(Ident,newIdx)
+		RefreshPathManager()
 	}
 }
 
 
-GetObjectElementByIdent(byref Ident, byref TempTree)
+GetParentAndIndex(ByRef TempTree, ByRef idx)
 {
-	IdentRange := ""
-	Ident := LTrim(Ident, ".")
-
-	AllIxd := StrSplit(Ident , ".")
-	LoopCnt := AllIxd.MaxIndex() - 1
-	Loop, %LoopCnt%
-	{
-		TempTree := TempTree[AllIxd[A_Index],4]
-		IdentRange := IdentRange . "." . AllIxd[A_Index]
-	}
-	; Replace Last element with x to find new position of Element
-	LastElement := AllIxd[AllIxd.MaxIndex()]
-	IdentRange := IdentRange . "." . RegExReplace(LastElement, "[0-9]+", "x")
-	Ident := IdentRange
-	
-	idx := RTrim(AllIxd[AllIxd.MaxIndex()], "+") 
-	
-	return idx 
-}
-
-
-FindRowNumByIdentAndSelect(oldIdent,newIdx)
-{
-	newIdent := RegExReplace(oldIdent, "x", newIdx)
 	GUI, PathManager:Default
 
-	TotalNumberOfRows := LV_GetCount()
-	Loop, %TotalNumberOfRows%
-	{
-		LV_GetText(Ident, A_Index, 1)
-		if (Ident == newIdent)
-		{
-			LV_Modify(A_Index,"Select")
-			break
-		}
-	}
-}
-
-
-PreviewContextMenu()
-{
-	if (G_MenuTree.MaxIndex() > 0)
-	{
-		DeleteAllContextMenus(AllContextMenuNames)
-		CreateContextMenu(G_MenuTree,G_MenuName,"TestMenuHandler",AllContextMenuNames)
-		Menu, %G_MenuName%, Show 
-	}
-}
-TestMenuHandler: ; TestMenuHandler for debug purpose
-	MsgBox, You clicked MenuItem: %A_ThisMenuItem%, Menu: %A_ThisMenu%, MenuItemPos: %A_ThisMenuItemPos%
-return 
-
-
-DeleteAllContextMenus(byref AllContextMenuNames)
-{
-	numE := AllContextMenuNames.MaxIndex()
-	Loop, %numE%
-	{
-		tempName := AllContextMenuNames[A_Index]
-		Menu, %tempName%, DeleteAll 
-	}
+	selection := Object()
+	selID := TV_GetSelection()
+	selection := G_CallTree[selID]
+	idx := selection["idx"]
+	
+	parantID := TV_GetParent(selID)
+	parent := G_CallTree[parantID]
+	TempTree := parent["data","sub"]
 }
 

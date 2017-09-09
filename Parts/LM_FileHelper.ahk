@@ -4,24 +4,43 @@
 ; Data-defines
 ; 
 ; Menu tree (root)
-;	[x,1] Type
-;	[x,2] Name
-;	[x,3] Branch/Leaf-Path
-; 	[x,4] BranchTree -> Representation like menu-root
+;	[x,"key"] 	Type
+;	[x,"name"] 	Name
+;	[x,"link"] 	Branch/Leaf-Path
+; 	[x,"sub"] 	BranchTree 	
+;	BranchTree representation like menu-root
 ;	
-;	e.g.:
-; 	Inifile data:
+;	E.g.:
+; 	Ini-file data:
 ;		[Root] 
-;		Branch1=nameN1|pathN1
+;		Branch1=nameB1|pathB1
 ;		Leaf=nameL1|pathL1
 ;		[pathN1]
 ;		Leaf=nameL2|pathL2
 ;		Leaf=nameL3|pathL3
 ;
-;	ManuTree-object
-;		Root[1] --> Node[1,4,1]	Leaf
-;			    |-> Node[1,4,2]	Leaf
-;		Root[2] --> Leaf[2]
+;	=> Generated Menutree
+;	+ ManuTree-Object
+;	 - key	= Root
+;	 - name	= Root
+;	 + sub ...
+;	 	+ [1] ;(Branch)
+;	 		- key	= branch1
+;	 		- name	= nameB1
+;	 		- link	= pathB1
+;	 		+ sub ...
+;				+ [1] ;(Leaf)
+;					- key	= leaf
+;					- name	= nameL2
+;					- link	= pathL3
+;				+ [2] ;(Leaf)
+;					- key	= leaf
+;					- name	= nameL3
+;					- link	= pathL3
+;	 	+ [2] ;(Leaf)
+;	 		- key	= leaf
+;	 		- name	= nameL1
+;	 		- link	= pathL1
 ;********************************************************************************************************************
 
 
@@ -32,28 +51,26 @@
 ; "key"="LeafName"|"Path"
 ; if key is branch then path is name of next section
 ;********************************************************************************************************************
-ParseUsersDefinesBlock(ParentNames)
+ParseUsersDefinesBlock(IniSectionName,ParentNames)
 {
+	IniRead, U_Menu_Trunk, %U_IniFile%, % IniSectionName
 	TreeSpecArray := Object()
-  
-	; Read out user defined Tree-Structure
-	IniRead, U_Trunk, %U_IniFile%, User_Config, Root 
-	IniRead, U_Menu_Trunk, %U_IniFile%, %U_Trunk%
-	
+
 	; Parse all user defines
 	Loop, Parse, U_Menu_Trunk, %SYS_NewLine%
 	{
 		TreeSpecArray[A_Index] := DecodeArrayEntry(A_LoopField)
-		BranchType := TreeSpecArray[A_Index,1]
+		BranchType := TreeSpecArray[A_Index,"key"]
 		if ( RegExMatch(BranchType, G_NBranchKey) == 1) 
 		{
-			ParentNames[ParentNames.MaxIndex()+1] := TreeSpecArray[A_Index,3]
+			; Memorize parent history to find recursions
+			ParentNames[ParentNames.MaxIndex()+1] := TreeSpecArray[A_Index,"link"]
 			CheckParentsForRecursion(ParentNames)
 
 			if (G_LevelMem < G_MAX_MenuDepth)
 			{
-				BranchCode := TreeSpecArray[A_Index, 3]
-				TreeSpecArray[A_Index,4] := ParseUsersDefinesBlocks(BranchCode,ParentNames)
+				BranchCode := TreeSpecArray[A_Index, "link"]
+				TreeSpecArray[A_Index,"sub"] := ParseUsersDefinesBlocks(BranchCode,ParentNames)
 			}
 			else
 			{
@@ -79,18 +96,19 @@ ParseUsersDefinesBlocks(IniSectionName, ParentNames) ; Name of Menu Node (unique
 	Loop, Parse, IniSection, %SYS_NewLine%
 	{
 		TreeSpecArray[A_Index] := DecodeArrayEntry(A_LoopField)
-		BranchType := TreeSpecArray[A_Index,1]
+		BranchType := TreeSpecArray[A_Index,"key"]
 		if ( RegExMatch(BranchType, G_NBranchKey) == 1)
 		{
-			BranchCode := TreeSpecArray[A_Index, 3]
-
+			BranchCode := TreeSpecArray[A_Index, "link"]
+			
+			; Memorize parent history to find recursions
 			ParentNames[ParentNames.MaxIndex()+1] := BranchCode
 			CheckParentsForRecursion(ParentNames)
 			
 			; Check wheter this branch hits the depth restriction
 			if (G_LevelMem < G_MAX_MenuDepth)
 			{
-				TreeSpecArray[A_Index,4] := ParseUsersDefinesBlocks(BranchCode,ParentNames)
+				TreeSpecArray[A_Index,"sub"] := ParseUsersDefinesBlocks(BranchCode,ParentNames)
 			}
 			else
 			{
@@ -128,19 +146,19 @@ DecodeArrayEntry(cline)
 	;normalize name
 	if ( RegExMatch(utype, G_NBranchKey) == 1)
 	{
-		arrayElem[1] := G_NBranchKey
+		arrayElem["key"] := G_NBranchKey
 	}
 	else if ( ( RegExMatch(utype, G_NSepKey) == 1)
 		|| ((name=="") && (ucommand=="")) )
 	{
-		arrayElem[1] := G_NSepKey
+		arrayElem["key"] := G_NSepKey
 	}
 	else
 	{
-		arrayElem[1] := G_NLeafKey
+		arrayElem["key"] := G_NLeafKey
 	}
-	arrayElem[2] := name
-	arrayElem[3] := ucommand
+	arrayElem["name"] := name
+	arrayElem["link"] := ucommand
 
 	return arrayElem
 }
@@ -154,9 +172,9 @@ SaveNextNodes(NodeTree,NodeSec)
 	Loop % NodeTree.MaxIndex()
 	{
 		; Store in helper variables
-		BranchType := NodeTree[A_Index, 1]
-		BranchName := NodeTree[A_Index, 2]
-		BranchCode := NodeTree[A_Index, 3]
+		BranchType := NodeTree[A_Index, "key"]
+		BranchName := NodeTree[A_Index, "name"]
+		BranchCode := NodeTree[A_Index, "link"]
 
 		NewIndexStr := IndexStr . "." . A_Index
 
@@ -166,9 +184,9 @@ SaveNextNodes(NodeTree,NodeSec)
 		IniWrite, %SaveString%, %U_IniFile%, %NodeSec%, %BranchType%
 
 		; Create next Menu level (if necessary)
-		if ( NodeTree[A_Index,4].MaxIndex() > 0)
+		if ( NodeTree[A_Index,"sub"].MaxIndex() > 0)
 		{
-			BranchStruct := NodeTree[A_Index, 4]
+			BranchStruct := NodeTree[A_Index, "sub"]
 			SaveNextNodes(BranchStruct,BranchCode)
 		}
 	}

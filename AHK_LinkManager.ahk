@@ -19,6 +19,9 @@
 ;			- Add-Gui resets when OK or cancel is hit
 ;		- Seperator added
 ;		- File-checks on loading
+; Version 0.9:
+;		- slighly different GUI approach with tree view
+;		- maintanace improvement by applying object deffently in source
 ;
 ; known issues:
 ; @todo What happens with GUI no Elements left (CutOut, Paste, Add Entity ...) 
@@ -26,7 +29,6 @@
 ; @todo GUI-function to modifiy user defined shortcut
 ; @todo Undo-Operation is needed
 ; @todo Modify dialogue for already defined entities
-; @todo Chatch routine if path is not valid
 ; @todo Useability improvement by adding Keys like ESC to add-dialougues
 
 #NoEnv  		; Recommended for performance and compatibility with future AutoHotkey releases.
@@ -87,16 +89,24 @@ global AllContextMenuNames := Object()
 
 ParentNames := Object()
 ParentNames[1] := G_MenuName
-global G_MenuTree := ParseUsersDefinesBlock(ParentNames)
+
+IniRead, U_Trunk, %U_IniFile%, User_Config, Root 
+
+global G_MenuTree := Object()
+G_MenuTree["key"] := "Root"
+G_MenuTree["name"] := G_MenuName
+G_MenuTree["sub"] := ParseUsersDefinesBlock(U_Trunk,ParentNames)
 
 ; Create context menu
-JumpStack := CreateContextMenu(G_MenuTree,G_MenuName,"MenuHandler",AllContextMenuNames)
+JumpStack := CreateContextMenu(G_MenuTree["sub"],G_MenuName,"MenuHandler",AllContextMenuNames)
 
 global CutOutElement := Object()
 global ByCutting := false
 
 Call := []
 MakeCallTable()
+
+global G_CallTree := Object()
 
 GUI, PathManager: new
 gosub MakeMainGui
@@ -170,11 +180,18 @@ Loop % JumpStack.MaxIndex()
 		SelectedNode := JumpStack[A_Index, 2]
 		Loop % SelectedNode.MaxIndex()
 		{
-			CurrentLeaf := SelectedNode[A_Index,2]
+			CurrentLeaf := SelectedNode[A_Index,"name"]
 			; Execute stored Path or URL or file of selected leaf
 			if (A_ThisMenuItem == CurrentLeaf)
 			{
-				Run, % SelectedNode[A_Index, 3]
+				try 
+				{
+					Run, % SelectedNode[A_Index, "link"]
+				}
+				catch
+				{
+					MsgBox, , Invalid Link, % "The link  doesn't exist: " . SelectedNode[A_Index, "link"]
+				}
 			}
 		}
 		break
@@ -184,9 +201,9 @@ return
 
 ; Ways to show Context Menu
 RunMenu:
-if (G_MenuTree.MaxIndex() > 0)
+if (G_MenuTree["sub"].MaxIndex() > 0)
 {
-	Menu, %G_MenuName%, Show 
+	Menu, %G_MenuName%, Show
 }
 else
 {
@@ -211,14 +228,14 @@ CreateContextMenu(MenuTree,MenuName,MenuHandle,AllContextMenuNames)
 	Loop % MenuTree.MaxIndex()
 	{
 		; Store in helper variables
-		BranchType := MenuTree[A_Index, 1]
-		BranchName := MenuTree[A_Index, 2]
-		BranchCode := MenuTree[A_Index, 3]
+		BranchType := MenuTree[A_Index, "key"]
+		BranchName := MenuTree[A_Index, "name"]
+		BranchCode := MenuTree[A_Index, "link"]
 		
 		; Create socond Menu level (if necessary)
-		if ( MenuTree[A_Index,4].MaxIndex() > 0)
+		if ( MenuTree[A_Index,"sub"].MaxIndex() > 0)
 		{
-			BranchStruct := MenuTree[A_Index, 4]
+			BranchStruct := MenuTree[A_Index, "sub"]
 			NewNodeName := G_NodeIDX . "_Sub_" . BranchCode
 			
 			; Creat next level
@@ -229,7 +246,7 @@ CreateContextMenu(MenuTree,MenuName,MenuHandle,AllContextMenuNames)
 		else ; otherwise create a simple entry
 		{
 			; Append entry via name of entry
-			EntityName := MenuTree[A_Index, 2]
+			EntityName := MenuTree[A_Index, "name"]
 			Menu, %MenuName%, Add, %EntityName%, %MenuHandle%
 		}
 	}
@@ -251,14 +268,14 @@ GenMenuNode(NodeName, NodeTree , JumpStack, MenuHandle, AllContextMenuNames)
 	Loop % NodeTree.MaxIndex()
 	{
 		; Store in helper variables
-		BranchType := NodeTree[A_Index, 1]
-		BranchName := NodeTree[A_Index, 2]
-		BranchCode := NodeTree[A_Index, 3]
+		BranchType := NodeTree[A_Index, "key"]
+		BranchName := NodeTree[A_Index, "name"]
+		BranchCode := NodeTree[A_Index, "link"]
 
 		; Create next Menu level (if necessary)
-		if ( NodeTree[A_Index,4].MaxIndex() > 0)
+		if ( NodeTree[A_Index,"sub"].MaxIndex() > 0)
 		{
-			BranchStruct := NodeTree[A_Index, 4]
+			BranchStruct := NodeTree[A_Index, "sub"]
 			NewNodeName := G_NodeIDX . "_Sub_" . BranchCode
 			NumEntries := NumEntries+1
 			
@@ -269,7 +286,7 @@ GenMenuNode(NodeName, NodeTree , JumpStack, MenuHandle, AllContextMenuNames)
 		else ; otherwise create a simple entry
 		{
 			; Append entry via name of entry
-			EntityName := NodeTree[A_Index, 2]
+			EntityName := NodeTree[A_Index, "name"]
 			Menu, %NodeName%, Add, %EntityName%, %MenuHandle%
 		}
 	}

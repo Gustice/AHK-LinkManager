@@ -5,6 +5,10 @@
 ;********************************************************************************************************************
 ; PathManager GUI
 ;********************************************************************************************************************
+PathManagerGUIAutorunLabel:
+	global G_RootItem := Object()
+return
+
 GuiCall:
     Call[A_GuiControl].()
 return
@@ -35,27 +39,26 @@ MakeCallTable()
 
 #IfWinActive ahk_group currWinIDGroup
 ^Up::
-	GUI, PathManager:Default
 	MoveUp()
 Return
 
 ^Down::
-	GUI, PathManager:Default
 	MoveDown()
 Return
 
 ^X::
-	GUI, PathManager:Default
 	CutOut()
 return
 
+^M::
+	ModifyEntity()
+return
+
 ^V::
-	GUI, PathManager:Default
 	InsertCutOut()
 return
 
 ^Del::
-	GUI, PathManager:Default
 	Remove()
 Return
 
@@ -113,9 +116,11 @@ ShowShortcuts()
 		Ctrl+Delete-Key	Delete selected entity
 		Ctrl+X		Cut out selected entity
 		Ctrl+V		Paste cut out to selected entity
+		Ctrl+M		Modify selected entity
 	)
 	MsgBox, ,Shortcuts, %Text%
 }
+
 
 UpdateButtons()
 {
@@ -123,34 +128,58 @@ UpdateButtons()
 
     TotalNumberOfRows := TV_GetCount()
     
-	if (TotalNumberOfRows == 0)
-	{
-		GuiControl, Disable, Se&parator
-		GuiControl, Disable, &Remove
+	selID := TV_GetSelection()
+	G_RootItem["idx"]
+	
+	
+	if (G_RootItem["idx"] == selID)
+	{ ; Dont allow modifiing of Root
+		GuiControl, Disable, Add &Section
+		GuiControl, Disable, Add &Entity
+		GuiControl, Disable, Add Se&parator
+		GuiControl, Disable, Modify
+		GuiControl, Disable, Remove
 		GuiControl, Disable, Move &Up
 		GuiControl, Disable, Move &Down
 		GuiControl, Disable, Cut
-	}
-	else
-	{
-		GuiControl, Enable, Se&parator
-		GuiControl, Enable, &Remove
-		GuiControl, Enable, Move &Up
-		GuiControl, Enable, Move &Down
-		
-		if (ByCutting == false)
-		{
-			GuiControl, Enable, Cut
-		}
-	}
-	
-	if (ByCutting == true)
-	{
-		GuiControl, Enable, Paste
-	}
-	else
-	{
 		GuiControl, Disable, Paste
+	}
+	else
+	{
+		GuiControl, Enable, Add &Section
+		GuiControl, Enable, Add &Entity
+
+		if ( (TotalNumberOfRows == 0) || (G_RootItem["idx"] == selID) )
+		{
+			GuiControl, Disable, Add Se&parator
+			GuiControl, Disable, Modify
+			GuiControl, Disable, Remove
+			GuiControl, Disable, Move &Up
+			GuiControl, Disable, Move &Down
+			GuiControl, Disable, Cut
+		}
+		else
+		{
+			GuiControl, Enable, Add Se&parator
+			GuiControl, Enable, Modify
+			GuiControl, Enable, Remove
+			GuiControl, Enable, Move &Up
+			GuiControl, Enable, Move &Down
+			
+			if (ByCutting == false)
+			{
+				GuiControl, Enable, Cut
+			}
+		}
+		
+		if (ByCutting == true)
+		{
+			GuiControl, Enable, Paste
+		}
+		else
+		{
+			GuiControl, Disable, Paste
+		}
 	}
 }
 
@@ -173,7 +202,6 @@ ManagerOK()
 	}
 	file.Write(IniFileHeader)
 	file.Close()
-	
 	
 	SaveNextNodes(G_MenuTree,"Menu_Root")
 	
@@ -213,28 +241,46 @@ ShowManagerGui()
 	WinGet, currWinID, ID, A
 	GroupAdd, currWinIDGroup, ahk_id %currWinID%
 
-	RefreshPathManager()
-
+	G_RootItem := RefreshPathManager()
+	
 	; Make sure ther is one Entity selected at the beginning
-;@todo	SelectedRow := LV_GetNext(0, "Focused")
-;@todo	LV_Modify(SelectedRow, "Select")
+	TV_Modify(G_RootItem["idx"] , "Select")
 }
 
 
 AddSection()
 {
-	global G_AllSectionNames
-	Gui PathManager: +OwnDialogs
-    InputBox SecName, Caption Name, Please Enter a name for the new Section:, , 300, 150
-    if (ErrorLevel)
-        return
+	SecName := AskForSectionName("")
+	if(SecName == "")
+		return
+	
+	NewEntity := MakeUniqueSectionEntity(SecName)
+	NewEntity["gui"] := "Select Bold"
 
+	AddNewEntity(NewEntity)
+}
+
+
+AskForSectionName(defaultInput)
+{
+	Gui PathManager: +OwnDialogs
+    InputBox SecName, Caption Name, Please Enter a name for the new Section:, , 300, 150 , , , , ,%defaultInput%
+    if (ErrorLevel)
+	{
+		SecName := ""
+	}
+	
+	return SecName
+}
+
+MakeUniqueSectionEntity(SecName)
+{
 	NewEntity := Object()
 	NewEntity["key"] := G_NBranchKey
 	NewEntity["name"] := RegExReplace(SecName, "[^A-Za-z0-9_]", "_")
 	
 	SecName := SecName . "_sec"
-	isalreadyUsed := CheckIfNamesIsUsed(AllSectionNames, SecName)
+	isalreadyUsed := CheckIfNamesIsUsed(G_AllSectionNames, SecName)
 	if (isalreadyUsed  == true)
 	{
 		SecName := "_a" . SecName
@@ -242,14 +288,45 @@ AddSection()
 	NewEntity["link"] := SecName
 	NewEntity["sub"] := Object()
 
-	AddNewEntity(NewEntity)
+	return NewEntity
 }
 
 
 AddEntity()
 {
-	ShowAddDialog()
+	ShowAddDialog("Sample", "C:\", "New")
 	Gui PathManager: +Disabled
+}
+
+
+ModifyEntity()
+{
+	GUI, PathManager:Default
+
+	selection := Object()
+	selID := TV_GetSelection()
+	selection := G_CallTree[selID]
+	
+	if (selection["data","key"] == G_NBranchKey)
+	{
+		SecName := AskForSectionName(selection["data","name"] )
+		if(SecName == "")
+			return
+
+		NewEntity := MakeUniqueSectionEntity(SecName)
+		selection["data","name"] := NewEntity["name"]
+		selection["data","link"] := NewEntity["link"]
+		RefreshPathManager()
+	}
+	else if (selection["data","key"] == G_NLeafKey)
+	{
+		ShowAddDialog(selection["data","name"], selection["data","link"], "Change")
+		Gui PathManager: +Disabled
+	}
+	else
+	{
+		
+	}	
 }
 
 
@@ -259,7 +336,9 @@ AddSeparator()
 	NewEntity["key"] := G_NSepKey
 	NewEntity["name"] := 
 	NewEntity["link"] := 
-	AddNewEntity(NewEntity)	
+	
+	NewEntity["gui"] := "Select"
+	AddNewEntity(NewEntity)
 }
 
 
@@ -267,6 +346,7 @@ Undo()
 {
 	MsgBox, ,Undo, Undo-Operation not implemented yet
 }
+
 
 AddNewEntity(NewEntity)
 {
@@ -286,6 +366,20 @@ AddNewEntity(NewEntity)
 }
 
 
+ModifySelectedLeaf(NewEntity)
+{
+	GUI, PathManager:Default
+
+	selection := Object()
+	selID := TV_GetSelection()
+	selection := G_CallTree[selID]
+	
+	selection["data","name"] := NewEntity["name"]
+	selection["data","link"] := NewEntity["link"]
+	RefreshPathManager()
+}
+
+
 IsAppendToSectionPossible(TempTree)
 {
 	if (IsObject(TempTree["sub"]))
@@ -295,8 +389,11 @@ IsAppendToSectionPossible(TempTree)
 	return false
 }
 
+
 CutOut()
 {
+	GUI, PathManager:Default
+
 	GetParentAndIndex(TempTree, idx)
 	
 	CutOutElement := TempTree[idx]
@@ -311,6 +408,8 @@ InsertCutOut()
 	if (ByCutting == true)
 	{
 		ByCutting := false
+		CutOutElement["gui"] := "Select"
+
 		AddNewEntity(CutOutElement)
 	}
 }
@@ -322,15 +421,16 @@ RefreshPathManager()
 	SampleTreeSettings()
 
 	TV_Delete()
-	Root := TV_Add("CM",, "Expand")
+	Root := TV_Add("Context Menu",, "Expand")
 	
 	G_CallTree := Object()
 	Item := Object()
 	Item["data"] := G_MenuTree
-	Item["idx"] := 0
+	Item["idx"] := Root
 	G_CallTree[Root] :=Item
 		
 	AppendNextNodes(G_CallTree, Root, G_MenuTree["sub"])
+	return Item
 }
 
 
@@ -339,11 +439,17 @@ SampleTreeSettings()
 	temp := G_CallTree.Pop()
 	while (temp)
 	{
+		; if you want to restore previous Config
+		newAtt := temp["data","gui"]
+		
+		; expand the entry on next tree set-up
 		tst := TV_Get(temp["item"], "E")
 		if (tst > 0)
 		{
-			temp["data","gui"] := "Expand"
+			newAtt := newAtt . " Expand"
 		}
+		
+		temp["data","gui"] := LTrim(newAtt)
 		temp := G_CallTree.Pop()
 	}
 }
@@ -361,16 +467,25 @@ AppendNextNodes(callTree, Parent, NodeTree)
 		Item["parent"] := Parent
 		
 		Attr := NodeTree[A_Index,"gui"]
+		NodeTree[A_Index,"gui"] := ""
+		
 		if ( NodeTree[A_Index,"sub"].MaxIndex() > 0)
-		{
+		{ ; create new branch if subs are defined
 			BranchName := NodeTree[A_Index, "name"]
 			BranchStruct := NodeTree[A_Index, "sub"]
 			newItem := TV_Add(BranchName, Parent, Attr)
 			Item["childs"] := AppendNextNodes(callTree, newItem, BranchStruct)
 		}
-		else ; otherwise create a simple entry
-		{
-			EntityName := NodeTree[A_Index, "name"]
+		else 
+		{ ; otherwise create a simple entry
+			if (NodeTree[A_Index, "key"] == G_NSepKey)
+			{
+				EntityName := "------"
+			}
+			else
+			{
+				EntityName := NodeTree[A_Index, "name"]
+			}
 			newItem := TV_Add(EntityName, Parent, Attr)
 		}
 		Item["item"] := newItem
@@ -384,6 +499,8 @@ AppendNextNodes(callTree, Parent, NodeTree)
 
 Remove()
 {
+	GUI, PathManager:Default
+
 	GetParentAndIndex(TempTree, idx)
 
 	TempTree.Remove(idx)
@@ -391,22 +508,20 @@ Remove()
 }
 
 
-ModifyEntity()
-{
-	MsgBox, , Error, Not implemented yet
-}
-
 MoveUp()
 {	
+	GUI, PathManager:Default
+
 	GetParentAndIndex(TempTree, idx)
 
 	if (idx > 1)
 	{
 		TreeElement := TempTree[idx]
 		TempTree.Remove(idx)
-		newIdx := idx-1
-		TempTree.Insert(newIdx,TreeElement)
+		newIdx := idx - 1
 		
+		TreeElement["gui"] := "Select"
+		TempTree.Insert(newIdx,TreeElement)
 		RefreshPathManager()
 	}
 }
@@ -414,6 +529,8 @@ MoveUp()
 
 MoveDown()
 {
+	GUI, PathManager:Default
+
 	GetParentAndIndex(TempTree, idx)
 
 	maxIdx := TempTree.MaxIndex()
@@ -421,9 +538,10 @@ MoveDown()
 	{		
 		TreeElement := TempTree[idx]
 		TempTree.Remove(idx)
-		newIdx := idx+1
+		newIdx := idx + 1
+
+		TreeElement["gui"] := "Select"
 		TempTree.Insert(newIdx,TreeElement)
-		
 		RefreshPathManager()
 	}
 }

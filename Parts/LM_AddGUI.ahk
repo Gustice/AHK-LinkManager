@@ -15,70 +15,79 @@ MakeAddDialog:
 	Gui, AddElement: Add, button, x70 yp25 w100 gSelectDir, Select &directory
 	Gui, AddElement: Add, button, xp110 w100 gSelectFile, Select &file
 	
-	Gui, AddElement: Add, button, x300 yp30 w50 , &OK
-	Gui, AddElement: Add, button, xp60 yp w50 , &Abbrechen
+	Gui, AddElement: Add, button, x300 yp30 w80 vApplyButton gApplyHandle , &OK
+	Gui, AddElement: Add, button, x+10 yp w80 , &Cancel
 return
 
 
 SelectDir:
 	GUI, AddElement: submit, NoHide
-	;MsgBox, Ich sehe %NewEntryPath% und %NewEntryName%
 	Gui, AddElement: +OwnDialogs
 
 	SplitPath, NewEntryPath, OutFileName, OutDir
 	selectedPath := GetValidPath(OutDir,"Dir")
 	GuiControl, , NewEntryPath, %selectedPath%
-
 return
 
 
 SelectFile:
 	GUI, AddElement: submit, NoHide
-	;MsgBox, Ich sehe %NewEntryPath% und %NewEntryName%
 
 	selectedPath := GetValidPath(NewEntryPath,"File")
 	GuiControl, , NewEntryPath, %selectedPath%
-
 return
 
-ShowAddDialog()
+ShowAddDialog(startName, startPath, isNew)
 {
 	Gui PathManager: +OwnDialogs
     Gui, AddElement: Show, , Add new path
+	
+	GuiControl, AddElement: ,NewEntryName, %startName%
+	GuiControl, AddElement: ,NewEntryPath, %startPath%
+
+	if (isNew == "Change")
+	{
+		GuiControl, AddElement: , ApplyButton, &Apply
+	}
+	else
+	{
+		GuiControl, AddElement: , ApplyButton, &OK
+	}
+	
 }
 
-AddElementButtonOK:
+ApplyHandle:
 	GUI, AddElement: submit
 	
 	NewEntity := Object()
 	NewEntity["key"] := G_NLeafKey
 	NewEntity["name"] := NewEntryName
 	NewEntity["link"] := NewEntryPath
-	AddNewEntity(NewEntity)	
-
-	GuiControl, AddElement: ,NewEntryName, Sample Name
-	GuiControl, AddElement: ,NewEntryPath, C:\
+	
+	GuiControlGet, Btext, AddElement: , ApplyButton
+	if (Btext=="&OK")
+	{
+		AddNewEntity(NewEntity)
+	}
+	else
+	{
+		ModifySelectedLeaf(NewEntity)
+	}
 
 	Gui, PathManager: -Disabled
 	GUI, PathManager: Show
 return
 
-
-AddElementButtonAbbrechen:
+AddElementButtonCancel:
 	GUI, AddElement: submit
-	GuiControl, AddElement: ,NewEntryName, Sample Name
-	GuiControl, AddElement: ,NewEntryPath, C:\
-
 	Gui, PathManager: -Disabled
 	GUI, PathManager: Show
-
 return
 
 GetValidPath(startPath,pathType)
 {
 	faultBackPath := "C:\"
 	static lastValid := "C:\"
-	;MsgBox, Ich sehe %startPath%
 	
 	IfExist, %startPath%
 	{

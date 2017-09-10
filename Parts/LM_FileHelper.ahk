@@ -169,12 +169,12 @@ DecodeArrayEntry(cline)
 SaveNextNodes(NodeTree,NodeSec)
 {
 	SaveIdxmodifier := 0
-	Loop % NodeTree.MaxIndex()
+	Loop % NodeTree["sub"].MaxIndex()
 	{
 		; Store in helper variables
-		BranchType := NodeTree[A_Index, "key"]
-		BranchName := NodeTree[A_Index, "name"]
-		BranchCode := NodeTree[A_Index, "link"]
+		BranchType := NodeTree[A_Index,"key"]
+		BranchName := NodeTree[A_Index,"name"]
+		BranchCode := NodeTree[A_Index,"link"]
 
 		NewIndexStr := IndexStr . "." . A_Index
 

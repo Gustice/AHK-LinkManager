@@ -22,13 +22,13 @@
 ; Version 0.9:
 ;		- slighly different GUI approach with tree view
 ;		- maintanace improvement by applying object deffently in source
+;		- modify dialogue to edit existing entities
 ;
 ; known issues:
 ; @todo What happens with GUI no Elements left (CutOut, Paste, Add Entity ...) 
 ; @todo What happens on different events if Name is already used
 ; @todo GUI-function to modifiy user defined shortcut
 ; @todo Undo-Operation is needed
-; @todo Modify dialogue for already defined entities
 ; @todo Useability improvement by adding Keys like ESC to add-dialougues
 
 #NoEnv  		; Recommended for performance and compatibility with future AutoHotkey releases.
@@ -80,8 +80,8 @@ Menu, tray, add, Help, TrayMenuHandler
 ;**********************************************************
 ; Initializing of Userdefined Menu-Tree
 ;**********************************************************
-global AllSectionNames := Object()
-AllSectionNames := CheckIniFileSections(U_IniFile)
+global G_AllSectionNames := Object()
+G_AllSectionNames := CheckIniFileSections(U_IniFile)
 
 ; Decode user definitions and orgenize result in structure
 global G_LevelMem := 1
@@ -108,6 +108,7 @@ MakeCallTable()
 
 global G_CallTree := Object()
 
+gosub PathManagerGUIAutorunLabel
 GUI, PathManager: new
 gosub MakeMainGui
 

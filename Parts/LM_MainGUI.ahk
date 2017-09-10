@@ -203,7 +203,7 @@ ManagerOK()
 	file.Write(IniFileHeader)
 	file.Close()
 	
-	SaveNextNodes(G_MenuTree,"Menu_Root")
+	SaveNextNodes(G_MenuTree["sub"],"Menu_Root")
 	
 	; Restore User defined Shortcut for showing the context menu
 	IniWrite, %U_ShortCut%, %U_IniFile%, User_Config, ShortKey

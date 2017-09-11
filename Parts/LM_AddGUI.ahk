@@ -1,9 +1,15 @@
-; AHK-LinkManager GUI Elements
-
 ;********************************************************************************************************************
+; AHK-LinkManager GUI Elements
 ; AddElement GUI
 ;********************************************************************************************************************
+AddElementGUIAutorunLabel:
 
+return
+
+
+;********************************************************************************************************************
+; GUI representation
+;********************************************************************************************************************
 MakeAddDialog:
 	GUI, AddElement: -SysMenu 
 	Gui, AddElement: Add, Text, x10 y10 w50, Name
@@ -19,24 +25,11 @@ MakeAddDialog:
 	Gui, AddElement: Add, button, x+10 yp w80 , &Cancel
 return
 
-
-SelectDir:
-	GUI, AddElement: submit, NoHide
-	Gui, AddElement: +OwnDialogs
-
-	SplitPath, NewEntryPath, OutFileName, OutDir
-	selectedPath := GetValidPath(OutDir,"Dir")
-	GuiControl, , NewEntryPath, %selectedPath%
-return
-
-
-SelectFile:
-	GUI, AddElement: submit, NoHide
-
-	selectedPath := GetValidPath(NewEntryPath,"File")
-	GuiControl, , NewEntryPath, %selectedPath%
-return
-
+;********************************************************************************************************************
+; @brief	Shows add/modify dialogue with preset textfields
+; @param[in] startName:	Preset for entity name
+; @param[in] startPath:	Preset for entity link
+; @param[in] isNew: call with "Change" to modify entity and start modify dialogue
 ShowAddDialog(startName, startPath, isNew)
 {
 	Gui PathManager: +OwnDialogs
@@ -53,9 +46,34 @@ ShowAddDialog(startName, startPath, isNew)
 	{
 		GuiControl, AddElement: , ApplyButton, &OK
 	}
-	
 }
 
+
+;********************************************************************************************************************
+; GUI buttons and events
+;********************************************************************************************************************
+
+; Selct directory event
+SelectDir:
+	GUI, AddElement: submit, NoHide
+	Gui, AddElement: +OwnDialogs
+
+	SplitPath, NewEntryPath, OutFileName, OutDir
+	selectedPath := GetValidPath(OutDir,"Dir")
+	GuiControl, , NewEntryPath, %selectedPath%
+return
+
+; Selct file event
+SelectFile:
+	GUI, AddElement: submit, NoHide
+
+	selectedPath := GetValidPath(NewEntryPath,"File")
+	GuiControl, , NewEntryPath, %selectedPath%
+return
+
+; OK / apply event
+; 	- OK button is for add dialogue 
+;	- Apply button is for modifiy dialogue
 ApplyHandle:
 	GUI, AddElement: submit
 	
@@ -78,12 +96,19 @@ ApplyHandle:
 	GUI, PathManager: Show
 return
 
+; Cancel event
 AddElementButtonCancel:
 	GUI, AddElement: submit
 	Gui, PathManager: -Disabled
 	GUI, PathManager: Show
 return
 
+
+;********************************************************************************************************************
+; @brief	Retrieves valid path with fault back options
+; @param[in] startPath: Path to be checked
+; @param[in] pathType:	Path type call with "Dir" or "File" for directory or file respectively
+; @return	valid path, in case of error either last valid path or fault back path
 GetValidPath(startPath,pathType)
 {
 	faultBackPath := "C:\"

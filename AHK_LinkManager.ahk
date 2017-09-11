@@ -1,28 +1,13 @@
 ; AHK-LinkManager
 ; AutoHotkey based mini Tool to access and manage frequently used paths, URLs, Files or programms.
-
-; Version 0.3: Initial Version
-;		Main Feature:
-;		- Only flat Menu strukture possible (each branch in root contains only leafes but no further nodes)
-;		- menu entry to find and editing ini-file
-; Version 0.5: 
-;		- Menu structures with up to 3 levels possible, each branch can contain further branches, and/or Leafes
-; Version 0.6:
-;		- Menu structure is setup recursively hence the depth is tecnically not more limited (limitation is given by global variable)
-; Version 0.7:
-; 		- GUI for link-menu set-up
-;		- Basic GUI functions, no great in effort put in ergonomical design
-;		- Several approvements in code appearence and tecnique
-; Version 0.8:
-;		- Improved useability in setup dialogue
-;			- Shortcut to main-gui added
-;			- Add-Gui resets when OK or cancel is hit
-;		- Seperator added
-;		- File-checks on loading
-; Version 0.9:
-;		- slighly different GUI approach with tree view
-;		- maintanace improvement by applying object deffently in source
-;		- modify dialogue to edit existing entities
+;
+; Features:
+; - Context menu is with elements like branches leafs and separators possible
+; - Context menu structure is setup recursively hence the depth is tecnically not more limited (limitation is only given by global variable)
+; - GUI for link-menu set-up
+; - GUI operation with shortcuts possible
+; - Tray menu entry to find and editing ini-file
+; - Advanced error handling: redundant branches (by link, not by name) and recursions are checked.
 ;
 ; known issues:
 ; @todo What happens with GUI no Elements left (CutOut, Paste, Add Entity ...) 
@@ -39,7 +24,7 @@ SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directory.
 ; Initialization of global Variables
 ;**********************************************************
 
-G_VersionString := "Version 0.80" 	; Version string
+G_VersionString := "Version 0.90" 	; Version string
 global U_IniFile := "MyLinks.ini" 	; Ini file with user links
 global G_MenuName := "MenuRoot"		; Name of Context menu root
 global SYS_NewLine := "`r`n" 		; Definition for New Line
@@ -56,7 +41,6 @@ Menu, Tray, TIp, AHK-LinkManager %G_VersionString% ; Tooltip für TrayIcon: Shows
 
 ;**********************************************************
 ; Setup shortcut
-;**********************************************************
 IniRead, U_ShortCut, %U_IniFile%, User_Config, ShortKey 
 ; Set Shortcut according to Ini-Define
 if (U_ShortCut != "")
@@ -68,59 +52,42 @@ if (U_ShortCut != "")
 	U_ShortCut := "#!J"
 }
 
-;**********************************************************
-; Setup additional Tray-Menu-Entrys
-;**********************************************************
-Menu, tray, add  ; Separator
-Menu, tray, add, Setup, TrayMenuHandler
-Menu, tray, add, Edit Ini-File, TrayMenuHandler
-Menu, tray, add, Restart, TrayMenuHandler
-Menu, tray, add, Help, TrayMenuHandler
+MakeTrayMenu()
 
 ;**********************************************************
 ; Initializing of Userdefined Menu-Tree
-;**********************************************************
-global G_AllSectionNames := Object()
+global G_AllSectionNames := Object()	; accumulates all section names in ini file to finde duplicates
 G_AllSectionNames := CheckIniFileSections(U_IniFile)
 
-; Decode user definitions and orgenize result in structure
-global G_LevelMem := 1
-global AllContextMenuNames := Object()
-
-ParentNames := Object()
-ParentNames[1] := G_MenuName
+gosub FileHelperAutorunLabel
 
 IniRead, U_Trunk, %U_IniFile%, User_Config, Root 
 
+ParentNames := Object()
+  ParentNames[1] := G_MenuName
 global G_MenuTree := Object()
-G_MenuTree["key"] := "Root"
-G_MenuTree["name"] := G_MenuName
+  G_MenuTree["key"] := "Root"
+  G_MenuTree["name"] := G_MenuName
+; Decode user definitions and orgenize result in structure
 G_MenuTree["sub"] := ParseUsersDefinesBlock(U_Trunk,ParentNames)
 
+JumpStack := Object()
 ; Create context menu
-JumpStack := CreateContextMenu(G_MenuTree["sub"],G_MenuName,"MenuHandler",AllContextMenuNames)
-
-global CutOutElement := Object()
-global ByCutting := false
-
-Call := []
-MakeCallTable()
-
-global G_CallTree := Object()
+JumpStack := GenerateCMenuNodes(G_MenuName, G_MenuTree["sub"], JumpStack, "MenuHandler")
 
 gosub PathManagerGUIAutorunLabel
 GUI, PathManager: new
 gosub MakeMainGui
 
+gosub AddElementGUIAutorunLabel
 GUI, AddElement: new, +OwnerPathManager
 gosub MakeAddDialog
 
 ;ShowManagerGui()
 
 return
-;**********************************************************
 ; End of Autostart-Section
-;**********************************************************
+;********************************************************************************************************************
 
 #Include .\Parts\LM_MainGUI.ahk
 #Include .\Parts\LM_AddGUI.ahk
@@ -129,18 +96,18 @@ return
 ;********************************************************************************************************************
 ; Implementation of Tray-Menu
 ;********************************************************************************************************************
+
+; Setup tray menu
 MakeTrayMenu()
 {
-	Menu Default Menu, Standard
-	Menu Tray, NoStandard
-	Menu Tray, Add, About, MenuCall
-	Menu Tray, Add
-	Menu Tray, Add, Default Menu, :Default Menu
-	Menu Tray, Add
-	Menu Tray, Add, Edit Custom Menu, MenuCall
-	Menu Tray, Default, Edit Custom Menu
+	Menu, tray, add  ; Separator
+	Menu, tray, add, Setup, TrayMenuHandler
+	Menu, tray, add, Edit Ini-File, TrayMenuHandler
+	Menu, tray, add, Restart, TrayMenuHandler
+	Menu, tray, add, Help, TrayMenuHandler
 }
 
+; On click on tray menu item
 TrayMenuHandler:
 	if (A_ThisMenuItem == "Setup")
 	{
@@ -165,13 +132,28 @@ return
 
 
 ;********************************************************************************************************************
-; Context-Menu
+; Context menu labels to handle events 
 ;********************************************************************************************************************
+
+;; Show Context Menu
+RunMenu:
+if (G_MenuTree["sub"].MaxIndex() > 0)
+{
+	Menu, %G_MenuName%, Show
+}
+else
+{
+	MsgBox, , Error, Menu could not be set up. Root Entry is missing.
+}
+return
+
+;********************************************************************************************************************
+;; On Click on context menu item
 MenuHandler:
 ; Next line for debug purpose only: 
 ; MsgBox, You clicked ThisMenuItem %A_ThisMenuItem%, ThisMenu %A_ThisMenu%, ThisMenuItemPos %A_ThisMenuItemPos%
 
-; Brows all defined menu nodes
+; Brows all defined menu nodes in unrolled tree-structure
 Loop % JumpStack.MaxIndex()
 {
 	BranchCode := JumpStack[A_Index, 1]
@@ -200,72 +182,23 @@ Loop % JumpStack.MaxIndex()
 }
 return
 
-; Ways to show Context Menu
-RunMenu:
-if (G_MenuTree["sub"].MaxIndex() > 0)
-{
-	Menu, %G_MenuName%, Show
-}
-else
-{
-	MsgBox, , Error, Menu could not be set up. Root Entry is missing.
-}
-return
-
 
 ;********************************************************************************************************************
-; Context-Menu Functions
-; The menu is setup with recursive approach
-;********************************************************************************************************************
-CreateContextMenu(MenuTree,MenuName,MenuHandle,AllContextMenuNames)
+; @brief	Context-Menu Functions
+; @details 	Setup the context menu structure with recursive approach.
+; @param[in] NodeName:	Name of context menu branch (or root like in the first step)
+; @param[in] NodeTree:	User defined menu structer bit coded in tree Objects (see Menu tree)
+; @param[in] JumpStack:	Unrolled tree structure in order to evluate user input (klicked item)
+; @param[in] MenuHandle: Branch handle of parent Menu
+; @return JumpStack (see param[in])
+GenerateCMenuNodes(NodeName, NodeTree , JumpStack, MenuHandle)
 {
-	JumpStack := Object()
-	AllContextMenuNames[1] := MenuName
-
-	; Append first menu structure to "unrolled" menu
-	JumpStack[1, 1] := MenuName
-	JumpStack[1, 2] := MenuTree
-	
-	Loop % MenuTree.MaxIndex()
-	{
-		; Store in helper variables
-		BranchType := MenuTree[A_Index, "key"]
-		BranchName := MenuTree[A_Index, "name"]
-		BranchCode := MenuTree[A_Index, "link"]
+	; maintain unrolled tree to stack in order to tests clicked elements
+	JSEntry := Object()
+	JSEntry [1] := NodeName
+	JSEntry [2] := NodeTree
+	JumpStack.Push(JSEntry)
 		
-		; Create socond Menu level (if necessary)
-		if ( MenuTree[A_Index,"sub"].MaxIndex() > 0)
-		{
-			BranchStruct := MenuTree[A_Index, "sub"]
-			NewNodeName := G_NodeIDX . "_Sub_" . BranchCode
-			
-			; Creat next level
-			JumpStack := GenMenuNode(NewNodeName, BranchStruct, JumpStack, MenuHandle, AllContextMenuNames)
-			; Append submenu if it contains valid entrys
-			Menu, %MenuName%, Add, %BranchName%, :%NewNodeName%
-		}
-		else ; otherwise create a simple entry
-		{
-			; Append entry via name of entry
-			EntityName := MenuTree[A_Index, "name"]
-			Menu, %MenuName%, Add, %EntityName%, %MenuHandle%
-		}
-	}
-	
-	return JumpStack
-}
-
-GenMenuNode(NodeName, NodeTree , JumpStack, MenuHandle, AllContextMenuNames)
-{
-	newIdx := JumpStack.MaxIndex()
-	newIdx := newIdx +1
-	JumpStack[newIdx, 1] := NodeName
-	JumpStack[newIdx, 2] := NodeTree
-	
-	newNIdx := AllContextMenuNames.MaxIndex()
-	newNIdx := newNIdx +1
-	AllContextMenuNames[newNIdx] := NodeName
-	
 	Loop % NodeTree.MaxIndex()
 	{
 		; Store in helper variables
@@ -278,9 +211,8 @@ GenMenuNode(NodeName, NodeTree , JumpStack, MenuHandle, AllContextMenuNames)
 		{
 			BranchStruct := NodeTree[A_Index, "sub"]
 			NewNodeName := G_NodeIDX . "_Sub_" . BranchCode
-			NumEntries := NumEntries+1
 			
-			JumpStack := GenMenuNode(NewNodeName, BranchStruct, JumpStack, MenuHandle, AllContextMenuNames)
+			JumpStack := GenerateCMenuNodes(NewNodeName, BranchStruct, JumpStack, MenuHandle)
 			; Append submenu if it contains valid entrys
 			Menu, %NodeName%, Add, %BranchName%, :%NewNodeName%
 		}
@@ -291,7 +223,6 @@ GenMenuNode(NodeName, NodeTree , JumpStack, MenuHandle, AllContextMenuNames)
 			Menu, %NodeName%, Add, %EntityName%, %MenuHandle%
 		}
 	}
-	
 	return JumpStack
 }
 

@@ -97,6 +97,8 @@ ApplyHandle:
 return
 
 ; Cancel event
+AddElementGuiClose:
+AddElementGuiEscape:
 AddElementButtonCancel:
 	GUI, AddElement: submit
 	Gui, PathManager: -Disabled

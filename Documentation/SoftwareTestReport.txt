@@ -63,15 +63,54 @@ The context menu works properly but without the faulty branches
 
 
 Main GUI-Function
-TestNo.	Test Case				Result
+TestNo.	Test Case					Result
 ---------------------------------------------------------------
+1	Buttons are context sensitive		
+1.1	TBD
+2	Add Sction possible				OK
+2.1	insert section works as properly		  OK
+2.2	append section works as properly		  OK
+2.3	if append not possible insert is executed	  OK
+3	Add Entity possible				OK
+3.1	insert Entity works as properly			  OK
+3.2	append Entity works as properly			  OK
+3.3	if append not possible insert is executed	  OK
+4	Add Separator possible				OK
+4.1	insert Separator works as properly		  OK
+4.2	append Separator works as properly		  OK
+4.3	if append not possible insert is executed	  OK
+3	Modify dialogue works properly			OK
+3.1	Section modify asks for name only		  OK
+3.2	Entity modify shows prefilled Add GUI 		  OK
+4	Moving works correctly				OK
+4.1	moved element is selected afterwars		  OK
+4.2	moved element is only moved in its level	  OK
+4.3	element cannot be moveed in another branch	  OK
+5	Cut/Paste work properly				OK
+5.1	Elements can be cut and pasted			  OK
+5.2	Append/Insert mechanic works properly		  OK
+5.3	Whole branches can be moved			  OK
+6 	Shortcuts are shown correctly			OK
+7	All shown shortcuts work properly		OK
+8	Cancel button has no effect on menu		OK
+8.1	After cancel tree is restored			  OK
 
+
+
+Main GUI-Function
+TestNo.	Test Case					Result
+---------------------------------------------------------------
+1	Duplets in sections definitions are resolved	OK
 
 
 Add GUI-Function
-TestNo.	Test Case				Result
+TestNo.	Test Case					Result
 ---------------------------------------------------------------
-
+1	Add GUi restarts allways with default string	OK
+2	Modify GUI restarts with current element string	OK
+3	Add file dialogue works				OK
+4	Add directory dialogue works			OK
+5	Text fields accept copy/paste (Ctrl+C/V)	OK
 
 
 Save Funktion
@@ -80,7 +119,7 @@ TestNo.	Test Case					Result
 1	GUI saves Ini file without changes when		
 	no changes where made				OK
 2	GUI saves last ini file als backup file		OK
-3	GUI saves user defined shortcut correctly	
+3	GUI saves user defined shortcut correctly	OK
 
 
 

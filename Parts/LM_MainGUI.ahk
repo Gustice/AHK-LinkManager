@@ -53,7 +53,7 @@ ShowManagerGui()
 	WinGet, currWinID, ID, A
 	GroupAdd, currWinIDGroup, ahk_id %currWinID%
 
-	G_RootItem := RefreshPathManager()
+	RefreshPathManager()
 	
 	; Make sure ther is one Entity selected at the beginning
 	TV_Modify(G_RootItem["idx"] , "Select")
@@ -95,8 +95,6 @@ UpdateButtons()
 	
 	if (G_RootItem["idx"] == selID)
 	{ ; Dont allow modifiing of Root
-		GuiControl, Disable, Add &Section
-		GuiControl, Disable, Add &Entity
 		GuiControl, Disable, Add Se&parator
 		GuiControl, Disable, Modify
 		GuiControl, Disable, Remove
@@ -104,12 +102,11 @@ UpdateButtons()
 		GuiControl, Disable, Move &Down
 		GuiControl, Disable, Cut
 		GuiControl, Disable, Paste
+		
+		GuiControl, ChooseString ,InsertChoice, Append ;@todo make other selection impossible
 	}
 	else
 	{
-		GuiControl, Enable, Add &Section
-		GuiControl, Enable, Add &Entity
-
 		if ( (TotalNumberOfRows == 0) || (G_RootItem["idx"] == selID) )
 		{
 			GuiControl, Disable, Add Se&parator
@@ -169,7 +166,7 @@ ManagerOK()
 	; Restore User defined Shortcut for showing the context menu
 	IniWrite, %U_ShortCut%, %U_IniFile%, User_Config, ShortKey
 	
-	Reload ;Reload whole App to Refresh new Context Menus
+	Reload ;Reload whole app to refresh new context menus
 }
 
 
@@ -183,6 +180,7 @@ return
 ManagerCancel()
 {
 	GUI, PathManager: submit
+	Reload ;Reload whole app to refresh context menus
 }
 
 ; Adds section (new branch)
@@ -389,7 +387,8 @@ RefreshPathManager()
 		
 	; Rebuild tree from scratch
 	AppendNextNodes(Root, G_MenuTree["sub"], G_CallTree)
-	return Item
+	
+	G_RootItem := Item
 }
 
 
@@ -532,6 +531,7 @@ MakeUniqueSectionEntity(SecName)
 	}
 	NewEntity["link"] := SecName
 	NewEntity["sub"] := Object()
+	G_AllSectionNames.Push(SecName) ; @todo 
 
 	return NewEntity
 }

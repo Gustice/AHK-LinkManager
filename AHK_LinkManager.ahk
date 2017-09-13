@@ -92,7 +92,7 @@ GUI, AddElement: new, +OwnerPathManager
 gosub MakeAddDialog
 
 
-ShowManagerGui() ; @todo delete
+; ShowManagerGui()
 
 return
 ; End of Autostart-Section
@@ -235,5 +235,3 @@ GenerateCMenuNodes(NodeName, NodeTree , JumpStack, MenuHandle)
 	}
 	return JumpStack
 }
-
-

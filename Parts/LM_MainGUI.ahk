@@ -155,7 +155,7 @@ ManagerOK()
 	
 	
 	IniFileHeader := ReturnDefaultHeader()
-	file := FileOpen(U_IniFile, "w")
+	file := FileOpen(U_IniFile, "w","UTF-16") ; UTF-16 for correct representation of german characters
 	if !IsObject(file)
 	{
 		MsgBox Can't open "%FileName%" for writing.

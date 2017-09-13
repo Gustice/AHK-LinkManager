@@ -15,6 +15,9 @@
 ; @todo GUI-function to modifiy user defined shortcut
 ; @todo Undo-Operation is needed
 ; @todo Useability improvement by adding Keys like ESC to add-dialougues
+;
+; @note All ahk-files should be in ANSI encouding by default ot display german letter correctly
+;		Ini File can also be in Unicode 
 
 #NoEnv  		; Recommended for performance and compatibility with future AutoHotkey releases.
 SendMode Input  ; Recommended for new scripts due to its superior speed and reliability.
@@ -37,7 +40,7 @@ global G_ManagerGUIname := "LinkManager Setup"
 global G_MAX_MenuDepth := 10		; Defines maximum count of Menu levels. "1" means there are no nodes allowed
 
 Menu, Tray, Icon, shell32.dll, 4 	; Changes Tray-Icon to build in icons (see C:\Windows\System32\shell32.dll)
-Menu, Tray, TIp, AHK-LinkManager %G_VersionString% ; Tooltip für TrayIcon: Shows Version
+Menu, Tray, TIp, AHK-LinkManager %G_VersionString% ; Tooltip for TrayIcon: Shows version
 
 ;**********************************************************
 ; Setup shortcut

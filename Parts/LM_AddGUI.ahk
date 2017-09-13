@@ -117,21 +117,19 @@ GetValidPath(startPath,pathType)
 	IfExist, %startPath%
 	{
 		faultBackPath := startPath
-		;MsgBox, Ist gültiger Pfad, ich fange hier an zu suchen
 		if (pathType == "Dir")
 			FileSelectFolder, path, %startPath%, 3
 		else if (pathType == "File")
-			FileSelectFile, path, 3, %startPath%, Datei wählen,
+			FileSelectFile, path, 3, %startPath%, Select file,
 		else
 			return faultBackPath
 	}
 	IfNotExist, %startPath%
 	{
-		;MsgBox, Ist kein gültiger Pfad, ich fange an auf C: zu suchen
 		if (pathType == "Dir")
 			FileSelectFolder, path, %lastValid%, 3
 		else if (pathType == "File")
-			FileSelectFile, path, 3, %lastValid%, Datei wählen,
+			FileSelectFile, path, 3, %lastValid%, Select file,
 		else
 			return faultBackPath
 	}

@@ -1,4 +1,4 @@
-Test-Report for AHK-LinkManager 0.9
+﻿Test-Report for AHK-LinkManager 0.9
 
 Tool Statup
 TestNo.	Test Case					Result

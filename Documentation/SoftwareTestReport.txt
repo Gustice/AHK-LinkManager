@@ -62,7 +62,13 @@ The context menu works properly but without the faulty branches
 
 
 
-GUI-Function
+Main GUI-Function
+TestNo.	Test Case				Result
+---------------------------------------------------------------
+
+
+
+Add GUI-Function
 TestNo.	Test Case				Result
 ---------------------------------------------------------------
 
@@ -71,9 +77,9 @@ TestNo.	Test Case				Result
 Save Funktion
 TestNo.	Test Case					Result
 --------------------------------------------------------------
-1	GUI saves Ini file without changes when
-	no changes where made			
-2	GUI saves last ini file als backup file		
+1	GUI saves Ini file without changes when		
+	no changes where made				OK
+2	GUI saves last ini file als backup file		OK
 3	GUI saves user defined shortcut correctly	
 
 

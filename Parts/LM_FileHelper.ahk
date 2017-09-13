@@ -162,6 +162,7 @@ ReturnDefaultHeader()
 	; <^>! (AltGr)
 	; Aso other Buttons like Mousebutton is possible (see AHK-help)
 	; Example: #^V (Win+Control+V)
+	; Example: #MButton (Win+MidMouseButton)
 	ShortKey=#!J
 	; Already used shortcuts ar shown in https://support.microsoft.com/de-de/help/12445/windows-keyboard-shortcuts
 	Root=Menu_Root

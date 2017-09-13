@@ -54,10 +54,15 @@ if (U_ShortCut != "")
 
 MakeTrayMenu()
 
+
 ;**********************************************************
 ; Initializing of Userdefined Menu-Tree
 global G_AllSectionNames := Object()	; accumulates all section names in ini file to finde duplicates
-G_AllSectionNames := CheckIniFileSections(U_IniFile)
+global G_NodeIDX := 0
+
+IniRead, FileSections, %U_IniFile%
+G_AllSectionNames := StrSplit(FileSections ,"`n")	; can't figure out why in this case only NewLine is neccessary
+ExitIfSectionsDoubled(G_AllSectionNames)
 
 gosub FileHelperAutorunLabel
 
@@ -69,7 +74,7 @@ global G_MenuTree := Object()
   G_MenuTree["key"] := "Root"
   G_MenuTree["name"] := G_MenuName
 ; Decode user definitions and orgenize result in structure
-G_MenuTree["sub"] := ParseUsersDefinesBlock(U_Trunk,ParentNames)
+G_MenuTree["sub"] := ParseUsersDefinesBlocks(U_Trunk,ParentNames)
 
 JumpStack := Object()
 ; Create context menu
@@ -83,7 +88,8 @@ gosub AddElementGUIAutorunLabel
 GUI, AddElement: new, +OwnerPathManager
 gosub MakeAddDialog
 
-;ShowManagerGui()
+
+ShowManagerGui() ; @todo delete
 
 return
 ; End of Autostart-Section
@@ -173,7 +179,7 @@ Loop % JumpStack.MaxIndex()
 				}
 				catch
 				{
-					MsgBox, , Invalid Link, % "The link  doesn't exist: " . SelectedNode[A_Index, "link"]
+					MsgBox, , Invalid Link, % "The called link doesn't exist: ''" . SelectedNode[A_Index, "link"] . "''"
 				}
 			}
 		}
@@ -187,7 +193,7 @@ return
 ; @brief	Context-Menu Functions
 ; @details 	Setup the context menu structure with recursive approach.
 ; @param[in] NodeName:	Name of context menu branch (or root like in the first step)
-; @param[in] NodeTree:	User defined menu structer bit coded in tree Objects (see Menu tree)
+; @param[in] NodeTree:	User defined menu structer bit coded in tree objects (see Menu tree)
 ; @param[in] JumpStack:	Unrolled tree structure in order to evluate user input (klicked item)
 ; @param[in] MenuHandle: Branch handle of parent Menu
 ; @return JumpStack (see param[in])
@@ -210,6 +216,7 @@ GenerateCMenuNodes(NodeName, NodeTree , JumpStack, MenuHandle)
 		if ( NodeTree[A_Index,"sub"].MaxIndex() > 0)
 		{
 			BranchStruct := NodeTree[A_Index, "sub"]
+			G_NodeIDX := G_NodeIDX+1
 			NewNodeName := G_NodeIDX . "_Sub_" . BranchCode
 			
 			JumpStack := GenerateCMenuNodes(NewNodeName, BranchStruct, JumpStack, MenuHandle)
@@ -225,4 +232,5 @@ GenerateCMenuNodes(NodeName, NodeTree , JumpStack, MenuHandle)
 	}
 	return JumpStack
 }
+
 

@@ -1,0 +1,84 @@
+Test-Report for AHK-LinkManager 0.9
+
+Tool Statup
+TestNo.	Test Case					Result
+---------------------------------------------------------------
+1	Menu consistant to ini file			OK
+3	Jump stack consistant to ini file		OK
+4	Jump stack entries made unique			OK
+
+
+
+Function of context menu
+TestNo.	Test Case					Result
+---------------------------------------------------------------
+1	Using context menu				OK
+1.1	Menu pops up by hitting shortcut		  OK
+1.2 	Menu structure consistant to Ini file		  OK
+1.3	All menu items jump to desired link		  OK
+1.3.1	Opens files if link is set to file		    OK
+1.3.2	Opens explorer if link is set to dir		    OK
+1.3.3	Opens web browser if link is url		    OK
+1.3.4	Opens files even if name contain blanks		    OK
+1.3.5	Invalid link caus error message			    OK
+2	Duplet entry names as siblings			OK (see *1)
+3	Same label names in different branches		OK
+
+*1) Duplets als siblings cannot be discriminated by user. Hence a additinal check for Duplets makes no real sence.
+If the user defines two links with the same name within the same level (siblings)
+both links are executed whitch are associated to the appearing label in the context menu.
+
+
+
+Function of tray menu
+TestNo.	Test Case					Result
+---------------------------------------------------------------
+1	"Setup" starts GUI				OK
+2	"Edit Ini-file" opens Ini file			OK
+3	"Restart" reloads LinkManager			OK
+	Changes on Ini-file affect context menu	
+	after restart only	
+4	"Help" opens help msg box			Ok	
+
+
+
+Errors on Tool Statup
+TestNo.	Test Case					Result
+---------------------------------------------------------------
+1	section duplets in Ini-file			OK
+1.1	Duplet on the beginning				  OK > App exits
+1.2	Duplet in mid position				  OK > App exits
+1.3	Duplet on file end				  OK > App exits
+2	Recursion of parents history			OK
+2.1	immidiate recurson (branch on itself)		  OK > App exits
+2.2 	recursion accross 3 levels			  OK > App exits
+3	Test G_MAX_MenuDepth				OK
+3.1	Test with =1					  OK (see *2)
+3.2	Test with =2					  OK (see *2)
+3.3	Test with =3					  OK
+
+*2) On each branch which extends the allowed tree depth a msg box appear.
+The context menu works properly but without the faulty branches
+
+
+
+GUI-Function
+TestNo.	Test Case				Result
+---------------------------------------------------------------
+
+
+
+Save Funktion
+TestNo.	Test Case					Result
+--------------------------------------------------------------
+1	GUI saves Ini file without changes when
+	no changes where made			
+2	GUI saves last ini file als backup file		
+3	GUI saves user defined shortcut correctly	
+
+
+
+
+User can overwrite Shortcut
+
+

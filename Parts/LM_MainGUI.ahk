@@ -12,6 +12,12 @@ PathManagerGUIAutorunLabel:
 	MakeCallTable()
 	
 	global G_CallTree := Object()
+	
+	global G_AddOpTypes := Object()
+	G_AddOpTypes["pre"] := "Prepend"
+	G_AddOpTypes["in"] := "Insert"
+	G_AddOpTypes["post"] := "Append"
+	
 return
 
 
@@ -21,8 +27,12 @@ return
 MakeMainGui:       
 	Gui , PathManager: Add, TreeView
         , xm w350 h480 Count15 -Multi vMyList gGuiCall HwndMainPathManagerGUI
-		
-	Gui PathManager: Add, DropDownList, x+10 w75 r2 Choose1 vInsertChoice, Insert|Append
+	
+	PreStr := G_AddOpTypes["pre"]
+	InstStr := G_AddOpTypes["in"]
+	PorstStr := G_AddOpTypes["post"]
+	
+	Gui PathManager: Add, DropDownList, x+10 w75 r3 Choose2 vInsertChoice, %PreStr%|%InstStr%|%PorstStr%
 	; @todo preview on Entity content
 		
 	Gui, PathManager: Add, Button, w75 r1 Y+15 gGuiCall, Add &Section
@@ -84,7 +94,6 @@ ShowShortcuts()
 ; Updates buttons to enable only possible operations
 UpdateButtons()
 {
-	; @todo Only append operation if root is selected
 	Critical
 
     TotalNumberOfRows := TV_GetCount()
@@ -103,7 +112,8 @@ UpdateButtons()
 		GuiControl, Disable, Cut
 		GuiControl, Disable, Paste
 		
-		GuiControl, ChooseString ,InsertChoice, Append ;@todo make other selection impossible
+		InstStr := G_AddOpTypes["in"]
+		GuiControl, ChooseString ,InsertChoice, %InstStr%
 	}
 	else
 	{
@@ -247,7 +257,7 @@ AddSeparator()
 	AddNewEntity(NewEntity)
 }
 
-; @todo 
+; @todo to be implemented
 Undo()
 {
 	MsgBox, ,Undo, Undo-Operation not implemented yet
@@ -258,17 +268,48 @@ Undo()
 AddNewEntity(NewEntity)
 {
 	global
-	GetParentAndIndex(TempTree, idx)
-	
-	GuiControlGet, choice, ,InsertChoice
-	if ( (choice == "Append") && ( IsAppendToSectionPossible(TempTree[idx]) == true) )
+	GUI, PathManager:Default
+
+	selID := TV_GetSelection()
+	if (selID == G_RootItem["idx"])
 	{
-		TempTree[idx,"sub"].Insert(1,NewEntity)
+		G_MenuTree["sub"].Insert(1,NewEntity)
+	}
+	else if (selID == 0)
+	{
+		G_MenuTree["sub"].Insert(1,NewEntity)
 	}
 	else
 	{
-		TempTree.Insert(idx,NewEntity)
+		GetParentAndIndex(TempTree, idx)
+		GuiControlGet, choice, ,InsertChoice
+		
+		PreStr := G_AddOpTypes["pre"]
+		InstStr := G_AddOpTypes["in"]
+		PorstStr := G_AddOpTypes["post"]
+		
+		if ( (choice == InstStr) && ( InsertToSectionPossible(TempTree[idx]) == true) )
+		{
+			TempTree[idx,"sub"].Insert(1,NewEntity)
+		}
+		else if (choice == InstStr)
+		{
+			TempTree.Insert(idx,NewEntity)
+		}
+		else if (choice == PreStr)
+		{
+			TempTree.Insert(idx,NewEntity)
+		}
+		else if (choice == PorstStr)
+		{
+			TempTree.Insert(idx+1,NewEntity)
+		}
+		else
+		{
+			MsgBox, , Critical Error, AddNewElement didn't work correctly, Selection of Dropdown is invalid.
+		}
 	}
+	
 	RefreshPathManager()
 }
 
@@ -363,6 +404,30 @@ MoveDown()
 	}
 }
 
+
+; Alter DropDown selection
+AlterAddMode()
+{
+	GUI, PathManager:Default
+	GuiControlGet, choice, ,InsertChoice
+	
+	PreStr := G_AddOpTypes["pre"]
+	InstStr := G_AddOpTypes["in"]
+	PorstStr := G_AddOpTypes["post"]
+	
+	if (choice == InstStr)
+	{
+		GuiControl, ChooseString ,InsertChoice, %PreStr%
+	}
+	else if (choice == PreStr)
+	{
+		GuiControl, ChooseString ,InsertChoice, %PorstStr%
+	}
+	else
+	{
+		GuiControl, ChooseString ,InsertChoice, %InstStr%
+	}
+}
 
 ;********************************************************************************************************************
 ; Helper Functions for GUI operations
@@ -486,7 +551,7 @@ AppendNextNodes(Parent, NodeTree, callTree)
 ;********************************************************************************************************************
 ; @brief	Checks wether a append operation on selected entity is possible
 ; @retval true if possible otherwise false
-IsAppendToSectionPossible(TempTree)
+InsertToSectionPossible(TempTree)
 {
 	if (IsObject(TempTree["sub"]))
 	{
@@ -531,7 +596,7 @@ MakeUniqueSectionEntity(SecName)
 	}
 	NewEntity["link"] := SecName
 	NewEntity["sub"] := Object()
-	G_AllSectionNames.Push(SecName) ; @todo 
+	G_AllSectionNames.Push(SecName)
 
 	return NewEntity
 }
@@ -581,17 +646,7 @@ return
 Return
 
 ^Tab::
-	GUI, PathManager:Default
-	GuiControlGet, choice, ,InsertChoice
-	
-	if (choice == "Append")
-	{
-		GuiControl, ChooseString ,InsertChoice, Insert
-	}
-	else
-	{
-		GuiControl, ChooseString ,InsertChoice, Append
-	}
+	AlterAddMode()
 Return
 #IfWinActive
 

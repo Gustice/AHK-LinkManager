@@ -10,11 +10,9 @@
 ; - Advanced error handling: redundant branches (by link, not by name) and recursions are checked.
 ;
 ; known issues:
-; @todo What happens with GUI no Elements left (CutOut, Paste, Add Entity ...) 
 ; @todo What happens on different events if Name is already used
 ; @todo GUI-function to modifiy user defined shortcut
 ; @todo Undo-Operation is needed
-; @todo Useability improvement by adding Keys like ESC to add-dialougues
 ;
 ; @note All ahk-files should be in ANSI encouding by default ot display german letter correctly
 ;		Ini File can also be in Unicode 
@@ -27,7 +25,7 @@ SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directory.
 ; Initialization of global Variables
 ;**********************************************************
 
-G_VersionString := "Version 0.90" 	; Version string
+G_VersionString := "Version 0.91" 	; Version string
 global U_IniFile := "MyLinks.ini" 	; Ini file with user links
 global G_MenuName := "MenuRoot"		; Name of Context menu root
 global SYS_NewLine := "`r`n" 		; Definition for New Line

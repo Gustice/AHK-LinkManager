@@ -1,4 +1,5 @@
 ﻿Test-Report for AHK-LinkManager 0.9
+note: Tab-width: 8 characters
 
 Tool Statup
 TestNo.	Test Case					Result
@@ -65,20 +66,27 @@ The context menu works properly but without the faulty branches
 Main GUI-Function
 TestNo.	Test Case					Result
 ---------------------------------------------------------------
-1	Buttons are context sensitive		
-1.1	TBD
+1	Buttons are context sensitive			OK
+1.1	When root is selected 				  v
+	only AddSection and AddEntry is visible 	  OK
+1.2	Wenn any other entity is selected		  v
+	All Buttons are expect paste are visible	  OK
+1.3	When cut is conducted paste is visible		  OK
 2	Add Sction possible				OK
-2.1	insert section works as properly		  OK
-2.2	append section works as properly		  OK
-2.3	if append not possible insert is executed	  OK
+2.1	prepend section works properly
+2.2	insert section works properly			  OK
+2.3	append section works properly			  OK
+2.4	if append not possible insert is executed	  OK
 3	Add Entity possible				OK
-3.1	insert Entity works as properly			  OK
-3.2	append Entity works as properly			  OK
-3.3	if append not possible insert is executed	  OK
+3.1	prepend Entity works properly			  OK
+3.2	insert Entity works properly			  OK
+3.3	append Entity works properly			  OK
+3.4	if append not possible insert is executed	  OK
 4	Add Separator possible				OK
-4.1	insert Separator works as properly		  OK
-4.2	append Separator works as properly		  OK
-4.3	if append not possible insert is executed	  OK
+4.1	prepend Separator works properly		  OK
+4.2	insert Separator works properly			  OK
+4.3	append Separator works properly			  OK
+4.4	if append not possible insert is executed	  OK
 3	Modify dialogue works properly			OK
 3.1	Section modify asks for name only		  OK
 3.2	Entity modify shows prefilled Add GUI 		  OK
@@ -88,13 +96,17 @@ TestNo.	Test Case					Result
 4.3	element cannot be moveed in another branch	  OK
 5	Cut/Paste work properly				OK
 5.1	Elements can be cut and pasted			  OK
-5.2	Append/Insert mechanic works properly		  OK
+5.2	Append/Insert/Preoend mechanic works properly	  OK
 5.3	Whole branches can be moved			  OK
 6 	Shortcuts are shown correctly			OK
 7	All shown shortcuts work properly		OK
 8	Cancel button has no effect on menu		OK
 8.1	After cancel tree is restored			  OK
-
+9	Root-as special case (Root is selected)		OK
+9.1	When prepend is initiated, insert is executed	  OK
+9.2	When append is initiated, insert is executed	  OK
+9.3	Normal functen in case of insert		  OK
+9.3	Root can't be deleted				  OK
 
 
 Main GUI-Function
@@ -123,7 +135,5 @@ TestNo.	Test Case					Result
 
 
 
-
-User can overwrite Shortcut
 
 

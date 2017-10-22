@@ -39,8 +39,9 @@ TestNo.	Test Case					Result
 3	"Restart" reloads LinkManager			OK
 	Changes on Ini-file affect context menu	
 	after restart only	
-4	"Help" opens help msg box			Ok	
-
+4	"Help" opens help msg box			OK	
+5	"Setup Hotkey" shows help file			OK
+6	"Show Hotkey" shows current hotkey set		OK
 
 
 Errors on Tool Statup
@@ -107,6 +108,14 @@ TestNo.	Test Case					Result
 9.2	When append is initiated, insert is executed	  OK
 9.3	Normal functen in case of insert		  OK
 9.3	Root can't be deleted				  OK
+10	Undo Operations					OK
+10.1	After adding section (prepend/insert/append)	  OK
+10.2	After adding entry				  OK
+10.3	After adding seperator				  OK
+10.4	After modify section / entry			  OK
+10.5	After remove entity				  OK
+10.6	After move up/down				  OK
+10.7	After cut/paste					  OK
 
 
 Main GUI-Function
@@ -123,6 +132,12 @@ TestNo.	Test Case					Result
 3	Add file dialogue works				OK
 4	Add directory dialogue works			OK
 5	Text fields accept copy/paste (Ctrl+C/V)	OK
+
+
+HotKey GUI
+TestNo.	Test Case					Result
+---------------------------------------------------------------
+1	@ToDo bc its a littel buggy but works already in most cases
 
 
 Save Funktion

@@ -18,6 +18,7 @@ PathManagerGUIAutorunLabel:
 	G_AddOpTypes["in"] := "Insert"
 	G_AddOpTypes["post"] := "Append"
 	
+	global G_MenuTreeHistory := Object()	
 return
 
 
@@ -26,15 +27,15 @@ return
 ;********************************************************************************************************************
 MakeMainGui:       
 	Gui , PathManager: Add, TreeView
-        , xm w350 h480 Count15 -Multi vMyList gGuiCall HwndMainPathManagerGUI
+        , xm w350 h520 Count15 -Multi vMyList gGuiCall HwndMainPathManagerGUI
 	
 	PreStr := G_AddOpTypes["pre"]
 	InstStr := G_AddOpTypes["in"]
 	PorstStr := G_AddOpTypes["post"]
 	
-	Gui PathManager: Add, DropDownList, x+10 w75 r3 Choose2 vInsertChoice, %PreStr%|%InstStr%|%PorstStr%
-	; @todo preview on Entity content
-		
+	Gui PathManager: Add, DropDownList, x+10 w75 r3 Choose2 vInsertChoice gRefreshPreview, %PreStr%|%InstStr%|%PorstStr%
+	Gui PathManager: Add, Picture, w100 h100 vPrevPic, Images\Insert.png
+	
 	Gui, PathManager: Add, Button, w75 r1 Y+15 gGuiCall, Add &Section
 	Gui, PathManager: Add, Button, w75 r1 gGuiCall, Add &Entity
 	Gui, PathManager: Add, Button, w75 r1 gGuiCall, Add Se&parator
@@ -48,12 +49,33 @@ MakeMainGui:
 	Gui, PathManager: Add, Button, w75 r1 Y+15 gGuiCall, Cut
 	Gui, PathManager: Add, Button, w75 r1 gGuiCall, Paste
 	
-	; Gui, PathManager: Add, Button, w75 r1 Y+15 gGuiCall, Undo
+	Gui, PathManager: Add, Button, w75 r1 Y+15 gGuiCall, Undo
 	
 	Gui, PathManager: Add, Button, w75 r2 Y+45 gGuiCall, Show Shortcuts
 	
 	Gui, PathManager: Add, Button, xm+50 w75 r1 gGuiCall, OK
     Gui, PathManager: Add, Button, x+20 w75 r1 gGuiCall Default, Cancel
+return
+
+RefreshPreview:
+	GUI, PathManager:Default
+	GuiControlGet, choice, ,InsertChoice
+	
+	PreStr := G_AddOpTypes["pre"]
+	InstStr := G_AddOpTypes["in"]
+	PorstStr := G_AddOpTypes["post"]
+	if (choice == InstStr)
+	{
+		GuiControl, , PrevPic, Images\Insert.png
+	}
+	else if (choice == PreStr)
+	{
+		GuiControl, , PrevPic, Images\Prepend.png
+	}
+	else
+	{
+		GuiControl, , PrevPic, Images\Apend.png
+	}
 return
 
 ; Display Manager GUI
@@ -87,6 +109,7 @@ ShowShortcuts()
 		Ctrl+X		Cut out selected entity
 		Ctrl+V		Paste cut out to selected entity
 		Ctrl+M		Modify selected entity
+		Ctrl+Z		Undo changes
 	)
 	MsgBox, ,Shortcuts, %Text%
 }
@@ -148,6 +171,16 @@ UpdateButtons()
 		{
 			GuiControl, Disable, Paste
 		}
+	}
+	
+	; Display Undo if necessary
+	if (G_MenuTreeHistory.MaxIndex()>0)
+	{
+		GuiControl, Enable, Undo
+	}
+	else
+	{
+		GuiControl, Disable, Undo
 	}
 }
 
@@ -229,6 +262,8 @@ ModifyEntity()
 		if(SecName == "")
 			return
 
+		SaveCurrentStructureOnStack()
+
 		NewEntity := MakeUniqueSectionEntity(SecName)
 		selection["data","name"] := NewEntity["name"]
 		selection["data","link"] := NewEntity["link"]
@@ -257,18 +292,14 @@ AddSeparator()
 	AddNewEntity(NewEntity)
 }
 
-; @todo to be implemented
-Undo()
-{
-	MsgBox, ,Undo, Undo-Operation not implemented yet
-}
-
 ; Adds Entity either as sibling prior to selection or as child
 ; Mode depends on selection of drop down menu
 AddNewEntity(NewEntity)
 {
 	global
 	GUI, PathManager:Default
+
+	SaveCurrentStructureOnStack()
 
 	selID := TV_GetSelection()
 	if (selID == G_RootItem["idx"])
@@ -318,6 +349,7 @@ AddNewEntity(NewEntity)
 ModifySelectedLeaf(NewEntity)
 {
 	GUI, PathManager:Default
+	SaveCurrentStructureOnStack()
 
 	selection := Object()
 	selID := TV_GetSelection()
@@ -333,6 +365,7 @@ ModifySelectedLeaf(NewEntity)
 CutOut()
 {
 	GUI, PathManager:Default
+	SaveCurrentStructureOnStack()
 
 	GetParentAndIndex(TempTree, idx)
 	
@@ -358,6 +391,7 @@ InsertCutOut()
 Remove()
 {
 	GUI, PathManager:Default
+	SaveCurrentStructureOnStack()
 
 	GetParentAndIndex(TempTree, idx)
 
@@ -369,6 +403,7 @@ Remove()
 MoveUp()
 {	
 	GUI, PathManager:Default
+	SaveCurrentStructureOnStack()
 
 	GetParentAndIndex(TempTree, idx)
 
@@ -388,6 +423,7 @@ MoveUp()
 MoveDown()
 {
 	GUI, PathManager:Default
+	SaveCurrentStructureOnStack()
 
 	GetParentAndIndex(TempTree, idx)
 
@@ -404,6 +440,15 @@ MoveDown()
 	}
 }
 
+; withraws last change
+Undo()
+{
+	if (G_MenuTreeHistory.MaxIndex()>0)
+	{		
+		G_MenuTree := G_MenuTreeHistory.Pop()	
+		RefreshPathManager()
+	}
+}
 
 ; Alter DropDown selection
 AlterAddMode()
@@ -427,6 +472,7 @@ AlterAddMode()
 	{
 		GuiControl, ChooseString ,InsertChoice, %InstStr%
 	}
+	gosub RefreshPreview
 }
 
 ;********************************************************************************************************************
@@ -586,7 +632,7 @@ MakeUniqueSectionEntity(SecName)
 {
 	NewEntity := Object()
 	NewEntity["key"] := G_NBranchKey
-	NewEntity["name"] := RegExReplace(SecName, "[^A-Za-z0-9_]", "_")
+	NewEntity["name"] := RegExReplace(SecName, "[^A-Za-z0-9_ ]", "_")
 	
 	SecName := SecName . "_sec"
 	isalreadyUsed := CheckIfNamesIsUsed(G_AllSectionNames, SecName)
@@ -615,10 +661,38 @@ SaveOldIniFile()
 }
 
 ;********************************************************************************************************************
+; @brief	Saves current MenuTree in tree stack object (history for undo operation)
+SaveCurrentStructureOnStack()
+{
+	CurrentStructure := G_MenuTree.Clone()
+	CurrentStructure["sub"] := DeepCloneStructure(G_MenuTree["sub"])
+	
+	G_MenuTreeHistory.Push(CurrentStructure)
+}
+
+;********************************************************************************************************************
+; @brief	Conducts deep clone operation of given Menu-tree structure
+; @details	uses recursive approach.
+DeepCloneStructure(currentStruct)
+{
+	cnt := currentStruct.MaxIndex()
+	tempStruct := Object()
+	Loop, %cnt%
+	{
+		tempStruct[A_Index] := currentStruct[A_Index].Clone()
+		if (IsObject(currentStruct[A_Index,"sub"]))
+		{
+			tempStruct[A_Index,"sub"] := DeepCloneStructure(currentStruct[A_Index,"sub"])			
+		}
+	}
+	return tempStruct
+}
+
+;********************************************************************************************************************
 ; GUI events
 ;********************************************************************************************************************
 
-; Shortcut evetns
+; Shortcut events
 ; These are GUI sensitive
 #IfWinActive ahk_group currWinIDGroup
 ^Up::
@@ -648,8 +722,12 @@ Return
 ^Tab::
 	AlterAddMode()
 Return
-#IfWinActive
 
+^Z::
+	Undo()
+return
+
+#IfWinActive
 
 ; Call-table and call delegate for GUI events
 GuiCall:

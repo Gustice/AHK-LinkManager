@@ -3,7 +3,8 @@
 ;
 ; Features:
 ; - Context menu is with elements like branches leafs and separators possible
-; - Context menu structure is setup recursively hence the depth is tecnically not more limited (limitation is only given by global variable)
+; - Context menu structure is setup recursively hence the depth is tecnically not more limited 
+;	(hence a limitation is only given by global variable)
 ; - GUI for link-menu set-up
 ; - GUI operation with shortcuts possible
 ; - Tray menu entry to find and editing ini-file
@@ -11,8 +12,6 @@
 ;
 ; known issues:
 ; @todo What happens on different events if Name is already used
-; @todo GUI-function to modifiy user defined shortcut
-; @todo Undo-Operation is needed
 ;
 ; @note All ahk-files should be in ANSI encouding by default ot display german letter correctly
 ;		Ini File can also be in Unicode 
@@ -25,7 +24,7 @@ SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directory.
 ; Initialization of global Variables
 ;**********************************************************
 
-G_VersionString := "Version 0.91" 	; Version string
+G_VersionString := "Version 1.00" 	; Version string
 global U_IniFile := "MyLinks.ini" 	; Ini file with user links
 global G_MenuName := "MenuRoot"		; Name of Context menu root
 global SYS_NewLine := "`r`n" 		; Definition for New Line
@@ -89,8 +88,10 @@ gosub AddElementGUIAutorunLabel
 GUI, AddElement: new, +OwnerPathManager
 gosub MakeAddDialog
 
+gosub MakeHotKeyCustomizeGui
 
-; ShowManagerGui()
+;ShowManagerGui()
+;gosub ShowHotKeyCustomizeGui
 
 return
 ; End of Autostart-Section
@@ -99,6 +100,7 @@ return
 #Include .\Parts\LM_MainGUI.ahk
 #Include .\Parts\LM_AddGUI.ahk
 #Include .\Parts\LM_FileHelper.ahk
+#Include .\Parts\LM_HotKeyGui.ahk
 
 ;********************************************************************************************************************
 ; Implementation of Tray-Menu
@@ -112,6 +114,8 @@ MakeTrayMenu()
 	Menu, tray, add, Edit Ini-File, TrayMenuHandler
 	Menu, tray, add, Restart, TrayMenuHandler
 	Menu, tray, add, Help, TrayMenuHandler
+	Menu, tray, add, Setup Hotkey, TrayMenuHandler
+	Menu, tray, add, Show Hotkey, TrayMenuHandler
 }
 
 ; On click on tray menu item
@@ -132,9 +136,18 @@ TrayMenuHandler:
 	}
 	else if (A_ThisMenuItem == "Help")
 	{
-		helptext := ReturnHelpText()
-		MsgBox, , Help, %helptext%
+		Run .\Documentation\HelpFile.pdf
 	}
+	else if (A_ThisMenuItem == "Setup Hotkey")
+	{
+		gosub ShowHotKeyCustomizeGui
+	}
+	else if (A_ThisMenuItem == "Show Hotkey")
+	{
+		tempuserHK := PrintHotKey(U_ShortCut)
+		MsgBox,% "Hotkey:`n" tempuserHK
+	}
+	
 return
 
 
@@ -233,3 +246,4 @@ GenerateCMenuNodes(NodeName, NodeTree , JumpStack, MenuHandle)
 	}
 	return JumpStack
 }
+

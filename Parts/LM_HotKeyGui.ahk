@@ -56,16 +56,23 @@ ExecuteHKSetup:
 	If WinCBox                                  
 		HKtemp := "#" HKtemp
 	
-	;If the new hotkey is only 1 character, then add the (~) modifier.
-	If StrLen(HKtemp) = 1
-		;This prevents any key from being blocked.
-		HKtemp := "~" HKtemp                          
+	try 
+	{
+		;If the new hotkey is only 1 character, then add the (~) modifier.
+		If StrLen(HKtemp) = 1
+			;This prevents any key from being blocked.
+			HKtemp := "~" HKtemp                          
+		
+		U_ShortCut := HKtemp
+		;Turn on the new hotkey.
+		Hotkey, %U_ShortCut%, RunMenu, On	
+	}
+	catch
+	{
+		return ; wait for next user input
+	}
 	
-	U_ShortCut := HKtemp
-	;Turn on the new hotkey.
-	Hotkey, %U_ShortCut%, RunMenu, On	
 	;Show a message: the new hotkey is ON.
-	
 	HKout := PrintHotKey(U_ShortCut)
 	TrayTip, RunMenu,% HKout " ON"   
 	
@@ -75,6 +82,7 @@ ExecuteHKSetup:
 		IniWrite, %U_ShortCut%, %U_IniFile%, User_Config, ShortKey
 	}
 	GUI, HKsetup: submit
+	
 return
 
 ;********************************************************************************************************************

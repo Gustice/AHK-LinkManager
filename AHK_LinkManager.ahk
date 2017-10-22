@@ -40,6 +40,23 @@ Menu, Tray, Icon, shell32.dll, 4 	; Changes Tray-Icon to build in icons (see C:\
 Menu, Tray, TIp, AHK-LinkManager %G_VersionString% ; Tooltip for TrayIcon: Shows version
 
 ;**********************************************************
+; Setup used files
+IfNotExist Images
+	FileCreateDir, Images
+IfNotExist Documentation
+	FileCreateDir, Documentation
+IfNotExist, %A_ScriptDir%\Images\Apend.png
+	FileInstall, Images\Apend.png, %A_ScriptDir%\Images\Apend.png
+IfNotExist, %A_ScriptDir%\Images\Insert.png
+	FileInstall, Images\Insert.png, %A_ScriptDir%\Images\Insert.png
+IfNotExist, %A_ScriptDir%\Images\Prepend.png
+	FileInstall, Images\Prepend.png, %A_ScriptDir%\Images\Prepend.png
+IfNotExist, %A_ScriptDir%\Documentation\HelpFile.pdf
+	FileInstall, Documentation\HelpFile.pdf, %A_ScriptDir%\Documentation\HelpFile.pdf
+IfNotExist, MyLinks.ini
+	FileInstall, MyLinks.ini, MyLinks.ini
+
+;**********************************************************
 ; Setup shortcut
 IniRead, U_ShortCut, %U_IniFile%, User_Config, ShortKey 
 ; Set Shortcut according to Ini-Define

@@ -152,7 +152,7 @@ ReturnDefaultHeader()
 {
 	IniFileHeader = 
 	( Ltrim
-	; Configuration File: Do Not Edit
+	; Configuration File: Edit with caution
 	[User_Config]
 	ShortKey=#MButton
 	Root=Menu_Root
@@ -161,7 +161,7 @@ ReturnDefaultHeader()
 	; 	Syntax: "BranchXY"="BranchName"|"Path"
 	; Declaratoin of entrys
 	; 	Syntax: "key"="LeafName"|"Path"
-	; Declaration of separators 
+	; Declaration of separators
 	; 	Separator=*empty*
 	[Menu_Root]
 	)

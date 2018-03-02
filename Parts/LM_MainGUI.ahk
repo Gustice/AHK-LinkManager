@@ -217,6 +217,7 @@ ManagerOK()
 PathManagerGuiClose:
 PathManagerGuiEscape:
 ManagerCancel()
+; @todo Save Note bevor just closing the GUI
 return 
 
 ; Cancel button event

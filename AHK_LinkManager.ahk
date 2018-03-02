@@ -12,6 +12,7 @@
 ;
 ; known issues:
 ; @todo What happens on different events if Name is already used
+; @todo a mode is needed where not a jump to the link is executed but the link isself should be send as string to keyboard
 ;
 ; @note All ahk-files should be in ANSI encouding by default ot display german letter correctly
 ;		Ini File can also be in Unicode 

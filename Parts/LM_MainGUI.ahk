@@ -36,15 +36,15 @@ MakeMainGui:
 	Gui PathManager: Add, DropDownList, x+10 w75 r3 Choose2 vInsertChoice gRefreshPreview, %PreStr%|%InstStr%|%PorstStr%
 	Gui PathManager: Add, Picture, w100 h100 vPrevPic, Images\Insert.png
 	
-	Gui, PathManager: Add, Button, w75 r1 Y+15 gGuiCall, Add &Section
-	Gui, PathManager: Add, Button, w75 r1 gGuiCall, Add &Entity
-	Gui, PathManager: Add, Button, w75 r1 gGuiCall, Add Se&parator
+	Gui, PathManager: Add, Button, w75 r1 gGuiCall, Add Entity
+	Gui, PathManager: Add, Button, w75 r1 Y+15 gGuiCall, Add Section
+	Gui, PathManager: Add, Button, w75 r1 gGuiCall, Add Separator
     
 	Gui, PathManager: Add, Button, w75 r1 Y+15 gGuiCall, Modify
 	Gui, PathManager: Add, Button, w75 r1 Y+15 gGuiCall, Remove
     
-    Gui, PathManager: Add, Button, w75 r1 Y+15 gGuiCall, Move &Up
-    Gui, PathManager: Add, Button, w75 r1 gGuiCall, Move &Down
+    Gui, PathManager: Add, Button, w75 r1 Y+15 gGuiCall, Move Up
+    Gui, PathManager: Add, Button, w75 r1 gGuiCall, Move Down
     
 	Gui, PathManager: Add, Button, w75 r1 Y+15 gGuiCall, Cut
 	Gui, PathManager: Add, Button, w75 r1 gGuiCall, Paste
@@ -103,12 +103,18 @@ ShowShortcuts()
 		Shortcuts for LinkManager GUI
 		
 		Ctrl+Tab	Change input selection Insert <=> Append
+		
+		Ctrl+A		Add element
+		Ctrl+S		Add section
+		Ctrl+D		Add seperator
+		Ctrl+M		Modify selected entity
+		Ctrl+Delete-Key	Delete selected entity
+		
 		Ctrl+Up-Key	Move selected entity up
 		Ctrl+Down-Key	Move selected entity up
-		Ctrl+Delete-Key	Delete selected entity
+		
 		Ctrl+X		Cut out selected entity
 		Ctrl+V		Paste cut out to selected entity
-		Ctrl+M		Modify selected entity
 		Ctrl+Z		Undo changes
 	)
 	MsgBox, ,Shortcuts, %Text%
@@ -127,11 +133,11 @@ UpdateButtons()
 	
 	if (G_RootItem["idx"] == selID)
 	{ ; Dont allow modifiing of Root
-		GuiControl, Disable, Add Se&parator
+		GuiControl, Disable, Add Separator
 		GuiControl, Disable, Modify
 		GuiControl, Disable, Remove
-		GuiControl, Disable, Move &Up
-		GuiControl, Disable, Move &Down
+		GuiControl, Disable, Move Up
+		GuiControl, Disable, Move Down
 		GuiControl, Disable, Cut
 		GuiControl, Disable, Paste
 		
@@ -142,20 +148,20 @@ UpdateButtons()
 	{
 		if ( (TotalNumberOfRows == 0) || (G_RootItem["idx"] == selID) )
 		{
-			GuiControl, Disable, Add Se&parator
+			GuiControl, Disable, Add Separator
 			GuiControl, Disable, Modify
 			GuiControl, Disable, Remove
-			GuiControl, Disable, Move &Up
-			GuiControl, Disable, Move &Down
+			GuiControl, Disable, Move Up
+			GuiControl, Disable, Move Down
 			GuiControl, Disable, Cut
 		}
 		else
 		{
-			GuiControl, Enable, Add Se&parator
+			GuiControl, Enable, Add Separator
 			GuiControl, Enable, Modify
 			GuiControl, Enable, Remove
-			GuiControl, Enable, Move &Up
-			GuiControl, Enable, Move &Down
+			GuiControl, Enable, Move Up
+			GuiControl, Enable, Move Down
 			
 			if (ByCutting == false)
 			{
@@ -216,15 +222,18 @@ ManagerOK()
 ; On GUI abortion or close events
 PathManagerGuiClose:
 PathManagerGuiEscape:
-ManagerCancel()
-; @todo Save Note bevor just closing the GUI
+	ManagerCancel()
 return 
 
 ; Cancel button event
 ManagerCancel()
 {
-	GUI, PathManager: submit
-	Reload ;Reload whole app to refresh context menus
+	MsgBox, 0x2134, Abort, Are you sure you want to quit? `n Your progress will be lost, 10
+	IfMsgBox Yes
+	{
+		GUI, PathManager: submit
+		Reload ;Reload whole app to refresh context menus		
+	}
 }
 
 ; Adds section (new branch)
@@ -696,6 +705,31 @@ DeepCloneStructure(currentStruct)
 ; Shortcut events
 ; These are GUI sensitive
 #IfWinActive ahk_group currWinIDGroup
+
+^Tab::
+	AlterAddMode()
+Return
+
+^A::
+AddEntity()
+return
+
+^S::
+AddSection()
+return
+
+^D::
+AddSeparator()
+return
+
+^M::
+	ModifyEntity()
+return
+
+^Del::
+	Remove()
+Return
+
 ^Up::
 	MoveUp()
 Return
@@ -708,21 +742,9 @@ Return
 	CutOut()
 return
 
-^M::
-	ModifyEntity()
-return
-
 ^V::
 	InsertCutOut()
 return
-
-^Del::
-	Remove()
-Return
-
-^Tab::
-	AlterAddMode()
-Return
 
 ^Z::
 	Undo()
@@ -740,14 +762,14 @@ MakeCallTable()
 	; Link-Manager-GUI
     Call["MyList"] := Func("UpdateButtons")
 
-	Call["Add &Section"] := Func("AddSection")
-	Call["Add &Entity"] := Func("AddEntity")
-	Call["Add Se&parator"] := Func("AddSeparator")
+	Call["Add Section"] := Func("AddSection")
+	Call["Add Entity"] := Func("AddEntity")
+	Call["Add Separator"] := Func("AddSeparator")
 
 	Call["Modify"] := Func("ModifyEntity")
 	Call["Remove"] := Func("Remove")
-    Call["Move &Up"] := Func("MoveUp")
-    Call["Move &Down"] := Func("MoveDown")
+    Call["Move Up"] := Func("MoveUp")
+    Call["Move Down"] := Func("MoveDown")
 	Call["Cut"] := Func("CutOut")
 	Call["Paste"] := Func("InsertCutOut")
 	Call["Undo"] := Func("Undo")

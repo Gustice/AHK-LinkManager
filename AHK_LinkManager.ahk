@@ -10,9 +10,16 @@
 ; - Tray menu entry to find and editing ini-file
 ; - Advanced error handling: redundant branches (by link, not by name) and recursions are checked.
 ;
+; Minor Changes:
+; V 1.01: 
+;	- Question prompt before just quitting the GUI (after user hits esc or cencel button)
+;	- Setup entry added in context menu
+;
 ; known issues:
 ; @todo What happens on different events if Name is already used
 ; @todo a mode is needed where not a jump to the link is executed but the link isself should be send as string to keyboard
+; @todo a simplier way to add elements in your custom struklture
+; @todo it should be possible to search withing files
 ;
 ; @note All ahk-files should be in ANSI encouding by default ot display german letter correctly
 ;		Ini File can also be in Unicode 
@@ -25,7 +32,7 @@ SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directory.
 ; Initialization of global Variables
 ;**********************************************************
 
-G_VersionString := "Version 1.00" 	; Version string
+G_VersionString := "Version 1.01" 	; Version string
 global U_IniFile := "MyLinks.ini" 	; Ini file with user links
 global G_MenuName := "MenuRoot"		; Name of Context menu root
 global SYS_NewLine := "`r`n" 		; Definition for New Line
@@ -36,6 +43,7 @@ global G_NSepKey 	:= "Separator"	; Keyword for Seperator-Definition in ini-File
 
 global G_ManagerGUIname := "LinkManager Setup"
 global G_MAX_MenuDepth := 10		; Defines maximum count of Menu levels. "1" means there are no nodes allowed
+	; Note there must be a limit given in order to prevent endles recursions
 
 Menu, Tray, Icon, shell32.dll, 4 	; Changes Tray-Icon to build in icons (see C:\Windows\System32\shell32.dll)
 Menu, Tray, TIp, AHK-LinkManager %G_VersionString% ; Tooltip for TrayIcon: Shows version
@@ -97,6 +105,10 @@ G_MenuTree["sub"] := ParseUsersDefinesBlocks(U_Trunk,ParentNames)
 JumpStack := Object()
 ; Create context menu
 JumpStack := GenerateCMenuNodes(G_MenuName, G_MenuTree["sub"], JumpStack, "MenuHandler")
+	Menu, %G_MenuName%, add  ; Separator
+	Menu, %G_MenuName%, add, Setup ..., SetupHandler
+
+
 
 gosub PathManagerGUIAutorunLabel
 GUI, PathManager: new
@@ -168,6 +180,9 @@ TrayMenuHandler:
 	
 return
 
+SetupHandler:
+	ShowManagerGui()
+return 
 
 ;********************************************************************************************************************
 ; Context menu labels to handle events 
@@ -262,6 +277,7 @@ GenerateCMenuNodes(NodeName, NodeTree , JumpStack, MenuHandle)
 			Menu, %NodeName%, Add, %EntityName%, %MenuHandle%
 		}
 	}
+	
 	return JumpStack
 }
 
